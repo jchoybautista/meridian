@@ -49,14 +49,13 @@ describe("deriveHoldings", () => {
     expect(h.avgCost).toBeCloseTo(20000);
   });
 
-  it("oversell beyond held qty — remaining quantity is 0, no crash", () => {
+  it("oversell beyond held qty — no crash, holding excluded", () => {
     const txns: Transaction[] = [
       tx({ id: "1", type: "buy",  quantity: 1, price_per_unit: 30000, transacted_at: "2024-01-01" }),
       tx({ id: "2", type: "sell", quantity: 5, price_per_unit: 50000, transacted_at: "2024-02-01" }),
     ];
-    const [h] = deriveHoldings(txns, priceMap);
-    expect(h.quantity).toBe(0);
-    expect(h.marketValue).toBe(0);
+    const holdings = deriveHoldings(txns, priceMap);
+    expect(holdings).toHaveLength(0);
   });
 
   it("asset with quantity 0 is excluded from holdings", () => {

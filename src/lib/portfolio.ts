@@ -56,17 +56,7 @@ export function deriveHoldings(
     const { price = 0, change24h = 0 } = priceMap[assetId] ?? {};
     const pnl = fifo(txns, price, change24h);
 
-    // Exclude fully sold positions (quantity exactly 0 from a clean full sell)
-    // but include oversell results (quantity 0 from consuming all lots with remainder)
-    // We determine if it was a full clean sell by checking if we started with buys
-    // and the sells exactly matched — use the simpler approach: check total bought vs total sold
-    const totalBought = txns.filter(t => t.type === "buy").reduce((s, t) => s + t.quantity, 0);
-    const totalSold   = txns.filter(t => t.type === "sell").reduce((s, t) => s + t.quantity, 0);
-    const isOversell  = totalSold > totalBought;
-    const isExactSell = Math.abs(totalSold - totalBought) < 1e-10;
-
-    // Exclude if quantity is 0 and it's not an oversell (i.e., it was a clean full sell)
-    if (pnl.quantity <= 0 && !isOversell) continue;
+    if (pnl.quantity <= 0) continue;
 
     const first = txns[0];
     holdings.push({
@@ -77,7 +67,6 @@ export function deriveHoldings(
       ...pnl,
     });
 
-    void isExactSell; // suppress unused var warning
   }
   return holdings;
 }
