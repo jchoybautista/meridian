@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import type { HoldingWithPnL } from "../../types";
 import { ChangeBadge } from "../ui/ChangeBadge";
@@ -137,9 +137,8 @@ export function HoldingsTable({ holdings, loading, onNavigate }: Props) {
                 };
 
                 return (
-                  <>
+                  <React.Fragment key={h.asset_id}>
                     <tr
-                      key={h.asset_id}
                       className="border-b border-line/50 hover:bg-elevated/40 cursor-pointer transition-colors"
                       onClick={() => {
                         setExpanded(isOpen ? null : h.asset_id);
@@ -227,7 +226,7 @@ export function HoldingsTable({ holdings, loading, onNavigate }: Props) {
                         </td>
                       </tr>
                     )}
-                  </>
+                  </React.Fragment>
                 );
               })}
             </tbody>

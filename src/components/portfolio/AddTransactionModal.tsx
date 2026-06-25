@@ -36,6 +36,7 @@ export function AddTransactionModal({ onClose, onSubmit }: Props) {
   useEffect(() => {
     clearTimeout(searchRef.current);
     if (!query.trim()) { setResults([]); return; }
+    let cancelled = false;
     searchRef.current = setTimeout(() => {
       void (async () => {
         const q = query.toLowerCase();
@@ -53,10 +54,10 @@ export function AddTransactionModal({ onClose, onSubmit }: Props) {
             .slice(0, 5)
             .map((c) => ({ id: c.id, symbol: c.symbol, name: c.name, type: "crypto" as const, image: c.image }));
         } catch { /* ignore */ }
-        setResults([...cryptoMatches, ...stockMatches].slice(0, 8));
+        if (!cancelled) setResults([...cryptoMatches, ...stockMatches].slice(0, 8));
       })();
     }, 300);
-    return () => clearTimeout(searchRef.current);
+    return () => { cancelled = true; clearTimeout(searchRef.current); };
   }, [query]);
 
   const handleSubmit = async (e: React.FormEvent) => {
