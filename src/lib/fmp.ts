@@ -316,7 +316,7 @@ export async function getAnalystRatings(symbol: string): Promise<AnalystRatings 
     const cached = localStorage.getItem(ck);
     if (cached) {
       const { data, ts } = JSON.parse(cached) as { data: AnalystRatings; ts: number };
-      if (Date.now() - ts < 24 * 60 * 60 * 1000) return data;
+      if (Date.now() - ts < 6 * 60 * 60 * 1000) return data;
     }
   } catch { /* ignore */ }
 
@@ -374,7 +374,7 @@ export async function getFinancialHighlights(symbol: string): Promise<QuarterlyF
     const cached = localStorage.getItem(ck);
     if (cached) {
       const { data, ts } = JSON.parse(cached) as { data: QuarterlyFinancial[]; ts: number };
-      if (Date.now() - ts < 24 * 60 * 60 * 1000) return data;
+      if (Date.now() - ts < 6 * 60 * 60 * 1000) return data;
     }
   } catch { /* ignore */ }
 
@@ -458,7 +458,7 @@ interface FMPSector {
 export async function getSectorPerformance(): Promise<SectorData[]> {
   if (!KEY) return [];
   const ck = "meridian:fmp:sectors";
-  const TTL = 60 * 60 * 1000;
+  const TTL = 5 * 60 * 1000;
   try {
     const cached = localStorage.getItem(ck);
     if (cached) {
