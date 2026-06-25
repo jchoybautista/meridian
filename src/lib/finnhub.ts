@@ -61,13 +61,31 @@ async function fetchQuote(symbol: string): Promise<Asset | null> {
   }
 }
 
-export async function getFinnhubStockList(): Promise<{ assets: Asset[]; sample: boolean }> {
-  if (!KEY) return { assets: seedStocks(), sample: true };
+// Deduplicate concurrent callers (Dashboard + Portfolio both call this on mount)
+let _inFlight: Promise<{ assets: Asset[]; sample: boolean }> | null = null;
 
-  const results = await Promise.allSettled(STOCK_UNIVERSE.map((s) => fetchQuote(s.symbol)));
+export function getFinnhubStockList(): Promise<{ assets: Asset[]; sample: boolean }> {
+  if (!KEY) return Promise.resolve({ assets: seedStocks(), sample: true });
+  if (_inFlight) return _inFlight;
+
+  _inFlight = _fetchAllQuotes().finally(() => { _inFlight = null; });
+  return _inFlight;
+}
+
+async function _fetchAllQuotes(): Promise<{ assets: Asset[]; sample: boolean }> {
+  const BATCH = 10;
+  const DELAY = 1_000; // ms between batches — keeps burst well under 60 req/min
+  const symbols = STOCK_UNIVERSE.map((s) => s.symbol);
+  const settled: PromiseSettledResult<Asset | null>[] = [];
+
+  for (let i = 0; i < symbols.length; i += BATCH) {
+    if (i > 0) await new Promise<void>((r) => setTimeout(r, DELAY));
+    const batch = await Promise.allSettled(symbols.slice(i, i + BATCH).map(fetchQuote));
+    settled.push(...batch);
+  }
 
   const assets: Asset[] = [];
-  results.forEach((r, i) => {
+  settled.forEach((r, i) => {
     const seed = seedStock(STOCK_UNIVERSE[i].symbol);
     if (r.status === "fulfilled" && r.value) {
       assets.push(r.value);
