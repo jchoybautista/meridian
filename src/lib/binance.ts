@@ -17,6 +17,7 @@ import type { Asset } from "../types";
 
 const REST = "https://data-api.binance.vision/api/v3";
 const WS = "wss://data-stream.binance.vision/ws";
+const STREAM = "wss://data-stream.binance.vision/stream";
 
 /** Map our display interval labels (m = minutes, D = days, W = weeks, M = months)
  *  to Binance's native interval strings (lowercase d/w, uppercase M for month). */
@@ -243,6 +244,101 @@ export function openTickerStream(
       ws.onclose = null; // prevent reconnect on intentional close
       ws.close();
     }
+  };
+}
+
+// ─── Multi-symbol live ticker stream (one socket for many symbols) ────────────
+
+/**
+ * One WebSocket carrying live 24h tickers for many symbols. `onTick` receives a
+ * symbol→ticker map at most once per second (coalesced to bound re-renders).
+ * Falls back to batched REST polling if the socket can't stay open. Returns a
+ * cleanup function.
+ */
+export function openMultiTickerStream(
+  symbols: string[],
+  onTick: (bySymbol: Map<string, LiveTicker>) => void,
+): () => void {
+  // our symbol ↔ binance pair (lowercase), skipping coins not on Binance
+  const pairToSymbol = new Map<string, string>();
+  for (const s of symbols) {
+    const pair = binanceSymbol(s);
+    if (pair) pairToSymbol.set(pair.toLowerCase(), s.toUpperCase());
+  }
+  if (pairToSymbol.size === 0) return () => {};
+
+  const latest = new Map<string, LiveTicker>();
+  let dirty = false;
+  let ws: WebSocket | null = null;
+  let pollTimer: ReturnType<typeof setInterval> | null = null;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let failures = 0;
+  let closed = false;
+
+  const flushTimer = setInterval(() => {
+    if (dirty) {
+      dirty = false;
+      onTick(new Map(latest));
+    }
+  }, 1000);
+
+  const pairs = [...pairToSymbol.keys()];
+
+  const startPolling = () => {
+    if (pollTimer) return;
+    const poll = () => {
+      void Promise.all(
+        [...pairToSymbol.values()].map(async (sym) => {
+          const t = await fetchTicker(sym);
+          if (t) { latest.set(sym, t); dirty = true; }
+        }),
+      );
+    };
+    poll();
+    pollTimer = setInterval(poll, 5000);
+  };
+  const stopPolling = () => {
+    if (pollTimer) { clearInterval(pollTimer); pollTimer = null; }
+  };
+
+  const connect = () => {
+    if (closed) return;
+    const url = `${STREAM}?streams=${pairs.map((p) => `${p}@ticker`).join("/")}`;
+    try {
+      ws = new WebSocket(url);
+    } catch {
+      startPolling();
+      return;
+    }
+    ws.onopen = () => { failures = 0; stopPolling(); };
+    ws.onmessage = (ev) => {
+      try {
+        const msg = JSON.parse(ev.data as string) as { stream?: string; data?: RawTicker };
+        if (!msg.stream || !msg.data) return;
+        const pair = msg.stream.replace("@ticker", "");
+        const sym = pairToSymbol.get(pair);
+        if (!sym) return;
+        latest.set(sym, parseTicker(msg.data));
+        dirty = true;
+      } catch { /* ignore malformed frame */ }
+    };
+    ws.onerror = () => ws?.close();
+    ws.onclose = () => {
+      if (closed) return;
+      failures += 1;
+      if (failures >= 3) startPolling();
+      reconnectTimer = setTimeout(connect, Math.min(1000 * failures, 10000));
+    };
+  };
+
+  connect();
+
+  return () => {
+    closed = true;
+    clearInterval(flushTimer);
+    if (reconnectTimer) clearTimeout(reconnectTimer);
+    stopPolling();
+    if (ws) { ws.onclose = null; ws.close(); }
   };
 }
 
