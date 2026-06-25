@@ -1,6 +1,6 @@
 const ENDPOINT = "https://api.alternative.me/fng/?limit=1";
 const CACHE_KEY = "meridian:feargreed";
-const TTL = 60 * 60 * 1000; // 1 hour
+const TTL = 10 * 60 * 1000; // 10 min
 
 export interface FearGreedData {
   value: number;           // 0–100
