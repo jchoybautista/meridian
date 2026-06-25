@@ -296,6 +296,43 @@ export interface CryptoSearchResult {
   thumb: string;
 }
 
+export interface TrendingCoin {
+  id: string;
+  name: string;
+  symbol: string;
+  thumb: string;
+  rank: number;
+  change24h?: number;
+}
+
+export async function getTrendingCoins(): Promise<TrendingCoin[]> {
+  const url = `${BASE}/search/trending`;
+  try {
+    const data = await getJson<{
+      coins: Array<{
+        item: {
+          id: string;
+          name: string;
+          symbol: string;
+          thumb: string;
+          market_cap_rank: number;
+          data?: { price_change_percentage_24h?: { usd?: number } };
+        };
+      }>;
+    }>(url);
+    return data.coins.slice(0, 7).map((c) => ({
+      id: c.item.id,
+      name: c.item.name,
+      symbol: c.item.symbol.toUpperCase(),
+      thumb: c.item.thumb,
+      rank: c.item.market_cap_rank ?? 0,
+      change24h: c.item.data?.price_change_percentage_24h?.usd,
+    }));
+  } catch {
+    return [];
+  }
+}
+
 /** Search coins by name/symbol. */
 export async function searchCrypto(query: string): Promise<CryptoSearchResult[]> {
   if (!query.trim()) return [];

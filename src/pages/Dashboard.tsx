@@ -14,6 +14,7 @@ import { LatestTransactions } from "../components/dashboard/LatestTransactions";
 import { LatestBlocks } from "../components/dashboard/LatestBlocks";
 import { FeaturedCoin } from "../components/dashboard/FeaturedCoin";
 import { FearGreedGauge } from "../components/dashboard/FearGreedGauge";
+import { TrendingCoins } from "../components/dashboard/TrendingCoins";
 import { ExploreAssets } from "../components/dashboard/ExploreAssets";
 import { Heatmap } from "../components/charts/Heatmap";
 import { DominancePie } from "../components/charts/DominancePie";
@@ -152,7 +153,7 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
 
       <div className={`mb-8 ${ROW}`}>
         <FearGreedGauge />
-        <PanelSkeleton title="Trending" />
+        <TrendingCoins />
         <PanelSkeleton title="More" />
         <PanelSkeleton title="More" />
       </div>
