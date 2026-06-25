@@ -7,6 +7,7 @@ import { MarketsCrypto } from "./pages/MarketsCrypto";
 import { MarketsStocks } from "./pages/MarketsStocks";
 import { AssetDetail } from "./pages/AssetDetail";
 import { Watchlist } from "./pages/Watchlist";
+import { Portfolio } from "./pages/Portfolio";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { NotFound } from "./pages/NotFound";
@@ -33,6 +34,14 @@ export default function App() {
               element={
                 <AuthGuard>
                   <Watchlist />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/portfolio"
+              element={
+                <AuthGuard>
+                  <Portfolio />
                 </AuthGuard>
               }
             />
