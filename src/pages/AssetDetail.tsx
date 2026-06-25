@@ -1,4 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Star, ArrowLeft, ExternalLink, Radio } from "lucide-react";
 import {
@@ -14,8 +23,15 @@ import {
   getStockProfile,
   getStockOHLC,
   fmpConfigured,
+  calcStockPerformance,
+  getAnalystRatings,
+  getFinancialHighlights,
+  getStockNews,
   type StockProfile,
   type StockOHLCPoint,
+  type AnalystRatings,
+  type QuarterlyFinancial,
+  type StockNewsItem,
 } from "../lib/fmp";
 import { useAsync } from "../hooks/useAsync";
 import { useLiveTicker } from "../hooks/useLiveTicker";
@@ -130,6 +146,24 @@ export function AssetDetail() {
     return getStockProfile(id);
   }, [type, id]);
 
+  // ── Analyst ratings ──
+  const analystRatings = useAsync<AnalystRatings | null>(async () => {
+    if (!id || isCrypto) return null;
+    return getAnalystRatings(id.toUpperCase());
+  }, [type, id]);
+
+  // ── Financial highlights ──
+  const financials = useAsync<QuarterlyFinancial[]>(async () => {
+    if (!id || isCrypto) return [];
+    return getFinancialHighlights(id.toUpperCase());
+  }, [type, id]);
+
+  // ── Stock news ──
+  const stockNews = useAsync<StockNewsItem[]>(async () => {
+    if (!id || isCrypto) return [];
+    return getStockNews(id.toUpperCase());
+  }, [type, id]);
+
   if (detail.error) return <ErrorState message={detail.error} onRetry={detail.reload} />;
 
   const asset = detail.data?.asset;
@@ -149,6 +183,12 @@ export function AssetDetail() {
   const trend = changeDirection(displayChange);
 
   const stockCandles: StockOHLCPoint[] = stockOHLC.data ?? [];
+
+  // ── Stock price performance (derived from OHLC, no extra API call) ──
+  const stockPerf = useMemo(() => {
+    if (isCrypto || !asset || !stockOHLC.data) return null;
+    return calcStockPerformance(stockOHLC.data, asset.price, asset.change24h);
+  }, [isCrypto, asset, stockOHLC.data]);
 
   // Stablecoins (USDT, USDC, etc.) have <5% price range — candlestick looks broken.
   const isStablecoin = useMemo(() => {
@@ -350,6 +390,75 @@ export function AssetDetail() {
               )}
             </dl>
           </div>
+
+          {/* ── Stock-only sections ── */}
+          {!isCrypto && (
+            <>
+              {/* Stock Price Performance */}
+              {stockPerf && (
+                <div className="mb-6">
+                  <h2 className="mb-3 text-sm font-semibold text-ink-muted uppercase tracking-wide">Price Performance</h2>
+                  <dl className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <PerformanceStat label="24h" value={stockPerf.change24h} />
+                    {stockPerf.change1W !== undefined && <PerformanceStat label="1 Week" value={stockPerf.change1W} />}
+                    {stockPerf.change1M !== undefined && <PerformanceStat label="1 Month" value={stockPerf.change1M} />}
+                    {stockPerf.change1Y !== undefined && <PerformanceStat label="1 Year" value={stockPerf.change1Y} />}
+                  </dl>
+                </div>
+              )}
+
+              {/* Analyst Ratings */}
+              {analystRatings.data && (
+                <div className="card mb-6 p-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <h2 className="text-sm font-semibold">Analyst Ratings</h2>
+                    <span className={`rounded-full px-3 py-0.5 text-xs font-bold ${
+                      analystRatings.data.consensus.includes("Buy")  ? "bg-up/15 text-up" :
+                      analystRatings.data.consensus.includes("Sell") ? "bg-down/15 text-down" :
+                      "bg-elevated text-ink-muted"
+                    }`}>
+                      {analystRatings.data.consensus}
+                    </span>
+                  </div>
+                  <AnalystBar ratings={analystRatings.data} />
+                </div>
+              )}
+
+              {/* Financial Highlights */}
+              {financials.data && financials.data.length > 0 && (
+                <div className="card mb-6 p-5">
+                  <h2 className="mb-4 text-sm font-semibold">Financial Highlights</h2>
+                  <FinancialChart data={financials.data} />
+                </div>
+              )}
+
+              {/* Company News */}
+              {stockNews.data && stockNews.data.length > 0 && (
+                <section className="card mb-6 p-5" aria-labelledby="news-heading">
+                  <h2 id="news-heading" className="mb-4 text-sm font-semibold">Company News</h2>
+                  <ul className="space-y-3">
+                    {stockNews.data.map((item, i) => (
+                      <li key={i} className="border-b border-line pb-3 last:border-0 last:pb-0">
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group block"
+                        >
+                          <p className="line-clamp-2 text-sm font-medium group-hover:text-brand transition-colors">
+                            {item.title}
+                          </p>
+                          <p className="mt-1 text-xs text-ink-muted">
+                            {item.site} · {new Date(item.publishedDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                          </p>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </>
+          )}
 
           {/* ── Price performance ── (crypto only) */}
           {isCrypto && (cryptoInfo.data?.change7d !== undefined || cryptoInfo.data?.change30d !== undefined) && (
@@ -576,5 +685,98 @@ function AboutStock({
         </a>
       )}
     </section>
+  );
+}
+
+// ─── AnalystBar ───────────────────────────────────────────────────────────────
+
+function AnalystBar({ ratings }: { ratings: AnalystRatings }) {
+  const { strongBuy, buy, hold, sell, strongSell } = ratings;
+  const total = strongBuy + buy + hold + sell + strongSell;
+  if (total === 0) return null;
+  const pct = (n: number) => `${((n / total) * 100).toFixed(1)}%`;
+  const segments = [
+    { label: "Strong Buy",  count: strongBuy,  color: "bg-[#16A34A]" },
+    { label: "Buy",         count: buy,        color: "bg-up" },
+    { label: "Hold",        count: hold,       color: "bg-yellow-400" },
+    { label: "Sell",        count: sell,       color: "bg-orange-500" },
+    { label: "Strong Sell", count: strongSell, color: "bg-down" },
+  ].filter((s) => s.count > 0);
+
+  return (
+    <div>
+      <div className="flex h-3 w-full overflow-hidden rounded-full">
+        {segments.map((s) => (
+          <div
+            key={s.label}
+            className={`${s.color} transition-all`}
+            style={{ width: pct(s.count) }}
+            title={`${s.label}: ${s.count}`}
+          />
+        ))}
+      </div>
+      <div className="mt-2 flex flex-wrap gap-3 text-xs text-ink-muted">
+        {segments.map((s) => (
+          <span key={s.label} className="flex items-center gap-1">
+            <span className={`inline-block h-2 w-2 rounded-full ${s.color}`} />
+            {s.label} ({s.count})
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── FinancialChart ───────────────────────────────────────────────────────────
+
+function FinancialChart({ data }: { data: QuarterlyFinancial[] }) {
+  return (
+    <div className="space-y-4">
+      {/* Revenue */}
+      <div>
+        <p className="mb-1 text-xs text-ink-muted">Revenue</p>
+        <ResponsiveContainer width="100%" height={80}>
+          <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <XAxis dataKey="quarter" tick={{ fontSize: 10, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+            <YAxis hide domain={["auto", "auto"]} />
+            <Tooltip
+              formatter={(v) => [typeof v === "number" ? formatCompactUsd(v) : v, "Revenue"]}
+              contentStyle={{ background: "#111827", border: "1px solid #1F2937", borderRadius: 8, fontSize: 12 }}
+            />
+            <Bar dataKey="revenue" radius={[3, 3, 0, 0]}>
+              {data.map((_, i) => <Cell key={i} fill="#6366F1" />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Net Income */}
+      <div>
+        <p className="mb-1 text-xs text-ink-muted">Net Income</p>
+        <ResponsiveContainer width="100%" height={80}>
+          <BarChart data={data} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+            <XAxis dataKey="quarter" tick={{ fontSize: 10, fill: "#6B7280" }} axisLine={false} tickLine={false} />
+            <YAxis hide domain={["auto", "auto"]} />
+            <Tooltip
+              formatter={(v) => [typeof v === "number" ? formatCompactUsd(v) : v, "Net Income"]}
+              contentStyle={{ background: "#111827", border: "1px solid #1F2937", borderRadius: 8, fontSize: 12 }}
+            />
+            <Bar dataKey="netIncome" radius={[3, 3, 0, 0]}>
+              {data.map((d, i) => <Cell key={i} fill={d.netIncome >= 0 ? "#22C55E" : "#EF4444"} />)}
+            </Bar>
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {/* EPS row */}
+      <div className="grid grid-cols-4 gap-3">
+        {data.map((d) => (
+          <div key={d.quarter} className="rounded-lg bg-elevated p-3 text-center">
+            <p className="text-[10px] text-ink-muted">{d.quarter}</p>
+            <p className={`text-sm font-bold tabular-nums ${d.eps >= 0 ? "text-up" : "text-down"}`}>
+              {d.eps >= 0 ? "+" : ""}{d.eps.toFixed(2)} EPS
+            </p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
