@@ -283,7 +283,7 @@ export function AssetDetail() {
                 </>
               ) : useStockCandlestick ? (
                 <CandlestickChart
-                  data={stockCandles.map((c) => ({ ...c }))}
+                  data={stockCandles}
                   trend={trend}
                 />
               ) : stockArea.data && stockArea.data.length > 0 ? (

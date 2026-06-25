@@ -21,7 +21,7 @@ interface FMPQuote {
 const ALL_SYMBOLS = STOCK_UNIVERSE.map((s) => s.symbol).join(",");
 
 const CACHE_KEY = "meridian:fmp:bulk";
-const CACHE_TTL = 3 * 60 * 1000; // 3 minutes
+const CACHE_TTL = 45 * 1000; // 45s — short enough for visibility-gated polling
 
 function readCache(): { data: FMPQuote[]; ts: number } | null {
   try {
@@ -199,6 +199,7 @@ export interface StockOHLCPoint {
   high: number;
   low: number;
   close: number;
+  volume?: number;
 }
 
 interface FMPHistorical {
@@ -207,6 +208,22 @@ interface FMPHistorical {
   high: number;
   low: number;
   close: number;
+  volume?: number;
+}
+
+/** Map FMP daily history → ascending OHLC points (NaN-dated rows dropped). */
+export function mapFmpHistorical(hist: FMPHistorical[]): StockOHLCPoint[] {
+  return hist
+    .map((h) => ({
+      time: Math.floor(new Date(h.date).getTime() / 1000),
+      open: h.open,
+      high: h.high,
+      low: h.low,
+      close: h.close,
+      volume: h.volume,
+    }))
+    .filter((d) => !Number.isNaN(d.time))
+    .sort((a, b) => a.time - b.time);
 }
 
 /**
@@ -236,18 +253,7 @@ export async function getStockOHLC(
     const res = await fetch(url, { headers: { accept: "application/json" } });
     if (!res.ok) throw new Error(`FMP OHLC ${res.status}`);
     const body = (await res.json()) as { historical?: FMPHistorical[] };
-    const hist = body.historical ?? [];
-
-    const data: StockOHLCPoint[] = hist
-      .map((h) => ({
-        time: Math.floor(new Date(h.date).getTime() / 1000),
-        open: h.open,
-        high: h.high,
-        low: h.low,
-        close: h.close,
-      }))
-      .filter((d) => !Number.isNaN(d.time))
-      .sort((a, b) => a.time - b.time);
+    const data: StockOHLCPoint[] = mapFmpHistorical(body.historical ?? []);
 
     try { localStorage.setItem(cacheKey, JSON.stringify({ data, ts: Date.now() })); } catch { /* ignore */ }
     return data;
