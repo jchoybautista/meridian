@@ -15,6 +15,7 @@ import { LatestBlocks } from "../components/dashboard/LatestBlocks";
 import { FeaturedCoin } from "../components/dashboard/FeaturedCoin";
 import { FearGreedGauge } from "../components/dashboard/FearGreedGauge";
 import { TrendingCoins } from "../components/dashboard/TrendingCoins";
+import { SectorPerformance } from "../components/dashboard/SectorPerformance";
 import { ExploreAssets } from "../components/dashboard/ExploreAssets";
 import { Heatmap } from "../components/charts/Heatmap";
 import { DominancePie } from "../components/charts/DominancePie";
@@ -191,11 +192,12 @@ function StocksBoard({ stocks }: { stocks: StocksState }) {
       </div>
 
       <div className={`mb-8 ${ROW}`}>
-        {featured.slice(1, 5).map((a) => (
+        <SectorPerformance />
+        {featured.slice(1, 4).map((a) => (
           <FeaturedCoin key={a.id} asset={a} />
         ))}
-        {featured.length < 5 &&
-          Array.from({ length: 5 - featured.length }).map((_, i) => (
+        {featured.length < 4 &&
+          Array.from({ length: 4 - Math.max(featured.length, 1) }).map((_, i) => (
             <PanelSkeleton key={i} title="Featured" />
           ))}
       </div>
