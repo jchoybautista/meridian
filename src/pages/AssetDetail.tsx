@@ -9,7 +9,7 @@ import {
   type CryptoInfo,
 } from "../lib/coingecko";
 import { getBinanceKlines, openKlineStream, binanceSymbol } from "../lib/binance";
-import { getStockChart, getStockQuote, getStockDailyOHLC, avConfigured } from "../lib/alphavantage";
+import { getStockQuote, getStockDailyOHLC } from "../lib/alphavantage";
 import {
   getStockProfile,
   getStockOHLC,
@@ -26,9 +26,13 @@ import { PriceChart } from "../components/charts/PriceChart";
 import {
   IntervalPicker,
   CRYPTO_INTERVALS,
+  STOCK_INTERVALS,
+  STOCK_STORAGE_KEY,
+  DEFAULT_STOCK_PREFERRED,
   getIntervalByLabel,
   type Interval,
 } from "../components/charts/IntervalPicker";
+import { getStockKlines, tdConfigured } from "../lib/twelvedata";
 import { ChangeBadge } from "../components/ui/ChangeBadge";
 import { AssetIcon } from "../components/ui/AssetIcon";
 import { ErrorState } from "../components/ui/States";
@@ -41,17 +45,6 @@ import {
 } from "../lib/format";
 import type { Asset, AssetType, PricePoint } from "../types";
 
-interface StockPeriod {
-  label: string;
-  days: number | "max";
-}
-
-const STOCK_PERIODS: StockPeriod[] = [
-  { label: "1W", days: 7 },
-  { label: "1M", days: 30 },
-  { label: "3M", days: 90 },
-  { label: "ALL", days: "max" },
-];
 
 function formatDate(iso?: string | null): string {
   if (!iso) return "—";
@@ -71,7 +64,9 @@ export function AssetDetail() {
   const [cryptoInterval, setCryptoInterval] = useState<Interval>(
     () => getIntervalByLabel("1D", CRYPTO_INTERVALS), // default daily candles
   );
-  const [stockPeriod, setStockPeriod] = useState<StockPeriod>(STOCK_PERIODS[1]); // default 1M
+  const [stockInterval, setStockInterval] = useState<Interval>(
+    () => getIntervalByLabel("1D", STOCK_INTERVALS),
+  );
   const [liveCandle, setLiveCandle] = useState<OHLCPoint | null>(null);
 
   // ── Asset detail ──
@@ -116,19 +111,18 @@ export function AssetDetail() {
     return getCryptoInfo(id);
   }, [type, id]);
 
-  // ── Stock OHLC: FMP first, AV fallback, else synthetic area chart ──
+  // ── Stock OHLC: Twelve Data (multi-interval) → FMP daily fallback ──
   const stockOHLC = useAsync<StockOHLCPoint[]>(async () => {
     if (!id || isCrypto) return [];
-    if (fmpConfigured) return getStockOHLC(id, stockPeriod.days);
-    return getStockDailyOHLC(id); // AV fallback: last 100 daily bars
-  }, [type, id, stockPeriod.days]);
-
-  // ── Stock area chart (synthetic fallback when no API keys configured) ──
-  const stockArea = useAsync<PricePoint[]>(async () => {
-    if (!id || isCrypto || fmpConfigured || avConfigured) return [];
-    const days = stockPeriod.days === "max" ? 365 : stockPeriod.days;
-    return getStockChart(id, days);
-  }, [type, id, stockPeriod.days]);
+    // Twelve Data: real multi-interval candles
+    if (tdConfigured && stockInterval.tdInterval) {
+      const td = await getStockKlines(id.toUpperCase(), stockInterval.tdInterval);
+      if (td.length > 0) return td;
+    }
+    // Fallback: FMP daily (all history, used when TD key absent or request failed)
+    if (fmpConfigured) return getStockOHLC(id, "max");
+    return getStockDailyOHLC(id);
+  }, [type, id, isCrypto, stockInterval.tdInterval]);
 
   // ── Stock company profile ──
   const stockProfile = useAsync<StockProfile>(async () => {
@@ -154,15 +148,7 @@ export function AssetDetail() {
   const isLive = isCrypto && liveTicker !== null;
   const trend = changeDirection(displayChange);
 
-  // Slice stock OHLC to period when not 'max'
-  const stockCandles: StockOHLCPoint[] = (() => {
-    const all = stockOHLC.data ?? [];
-    if (stockPeriod.days === "max") return all;
-    const cutoff = Date.now() / 1000 - (stockPeriod.days as number) * 86400;
-    return all.filter((c) => c.time >= cutoff);
-  })();
-
-  const useStockCandlestick = stockCandles.length > 0;
+  const stockCandles: StockOHLCPoint[] = stockOHLC.data ?? [];
 
   // Stablecoins (USDT, USDC, etc.) have <5% price range — candlestick looks broken.
   const isStablecoin = useMemo(() => {
@@ -252,23 +238,13 @@ export function AssetDetail() {
               {isCrypto ? (
                 <IntervalPicker value={cryptoInterval.label} onChange={setCryptoInterval} />
               ) : (
-                <div role="tablist" aria-label="Chart period" className="flex gap-1">
-                  {STOCK_PERIODS.map((p) => (
-                    <button
-                      key={p.label}
-                      role="tab"
-                      aria-selected={stockPeriod.label === p.label}
-                      onClick={() => setStockPeriod(p)}
-                      className={`rounded-md px-3 py-1 text-xs font-bold transition-colors ${
-                        stockPeriod.label === p.label
-                          ? "bg-brand text-white"
-                          : "text-ink-muted hover:bg-elevated hover:text-ink"
-                      }`}
-                    >
-                      {p.label}
-                    </button>
-                  ))}
-                </div>
+                <IntervalPicker
+                  value={stockInterval.label}
+                  onChange={setStockInterval}
+                  intervals={STOCK_INTERVALS}
+                  storageKey={STOCK_STORAGE_KEY}
+                  defaultPreferred={DEFAULT_STOCK_PREFERRED}
+                />
               )}
             </div>
 
@@ -301,15 +277,21 @@ export function AssetDetail() {
                 </>
               ) : stockOHLC.loading ? (
                 <div className="h-[340px] w-full skeleton rounded-lg" aria-hidden="true" />
-              ) : useStockCandlestick ? (
-                <CandlestickChart
-                  data={stockCandles as OHLCPoint[]}
-                  trend={trend}
-                />
-              ) : stockArea.data && stockArea.data.length > 0 ? (
-                <PriceChart data={stockArea.data} trend={trend} />
+              ) : stockCandles.length > 0 ? (
+                <>
+                  <CandlestickChart
+                    data={stockCandles as OHLCPoint[]}
+                    trend={trend}
+                    intraday={stockInterval.intraday}
+                  />
+                  <p className="mt-2 text-[10px] text-ink-muted">
+                    {stockInterval.note} · {tdConfigured ? "Live via Twelve Data" : "Data: FMP (daily)"} · scroll &amp; pinch to zoom
+                  </p>
+                </>
               ) : (
-                <div className="h-[340px] w-full skeleton rounded-lg" aria-hidden="true" />
+                <div className="flex h-[340px] items-center justify-center text-sm text-ink-muted">
+                  No chart data available.
+                </div>
               )}
             </div>
           </div>
