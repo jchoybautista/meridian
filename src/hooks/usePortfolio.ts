@@ -24,7 +24,7 @@ export function usePortfolio() {
     const { data, error: err } = await supabase
       .from("portfolio_transactions")
       .select("*")
-      .order("transacted_at", { ascending: true });
+      .order("transacted_at", { ascending: false });
     if (err) setError(err.message);
     else setTransactions((data ?? []) as Transaction[]);
     setLoading(false);
