@@ -8,10 +8,11 @@ history charts, and (when signed in) save a personal watchlist.
 
 ## Features
 
-- **Dashboard** — global market stats, top crypto + popular stocks, global search
-- **Crypto Markets** — sortable, filterable table of the top 100 coins (live, CoinGecko)
-- **Stock Markets** — popular stocks (Alpha Vantage, with sample-data fallback)
-- **Asset Detail** — price, 24h change, area chart, key stats, watchlist toggle
+- **Dashboard** — global market stats, live prices, a market-cap heatmap, top crypto + popular stocks, global search
+- **Realtime** — crypto prices, the heatmap, and charts update live via Binance WebSockets (no refresh); stocks poll periodically (free tier has no streaming)
+- **Crypto Markets** — sortable, filterable table of the top 100 coins, updating live via Binance
+- **Stock Markets** — popular stocks (FMP / Alpha Vantage, with sample-data fallback)
+- **Asset Detail** — live price + candlestick chart (Binance) with a Binance-style OHLC hover tooltip, key stats, watchlist toggle
 - **Auth** — email/password sign-in & registration (Supabase)
 - **Watchlist** — save and track favourite assets, synced to your account
 - **Accessible** — WCAG 2.1 AA: semantic HTML, keyboard nav, focus rings,
