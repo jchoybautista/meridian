@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { useAuth } from "../context/AuthContext";
-import { getFMPStockList } from "../lib/fmp";
+import { getStockList } from "../lib/alphavantage";
 import { binanceSymbol, fetchTicker } from "../lib/binance";
 import { deriveHoldings, portfolioSummary } from "../lib/portfolio";
 import type { Transaction, HoldingWithPnL, PortfolioSummary, PriceInfo } from "../types";
@@ -68,7 +68,7 @@ export function usePortfolio() {
       // Stocks: FMP bulk quote
       if (stockIds.length > 0) {
         try {
-          const { assets } = await getFMPStockList();
+          const { assets } = await getStockList();
           for (const a of assets) {
             if (stockIds.includes(a.id)) {
               map[a.id] = { price: a.price, change24h: a.change24h };

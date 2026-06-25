@@ -21,6 +21,7 @@ import { Heatmap } from "../components/charts/Heatmap";
 import { DominancePie } from "../components/charts/DominancePie";
 import { LiveDot } from "../components/ui/LiveDot";
 import { useLiveAssets } from "../hooks/useLiveAssets";
+import { useLiveStocks } from "../hooks/useLiveStocks";
 import type { Asset } from "../types";
 
 type Tab = "crypto" | "stocks";
@@ -152,11 +153,11 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
         <LatestBlocks />
       </div>
 
-      <div className={`mb-8 ${ROW}`}>
+      <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <FearGreedGauge />
-        <TrendingCoins />
-        <PanelSkeleton title="More" />
-        <PanelSkeleton title="More" />
+        <div className="lg:col-span-3">
+          <TrendingCoins />
+        </div>
       </div>
 
       {assets.length > 0 && (
@@ -167,20 +168,34 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
 }
 
 function StocksBoard({ stocks }: { stocks: StocksState }) {
-  const assets = stocks.data?.assets ?? [];
+  const snapshot = stocks.data?.assets ?? [];
+  const { assets, isLive: stocksLive } = useLiveStocks(snapshot);
   const featured = ["AAPL", "NVDA", "TSLA", "MSFT", "AMZN"]
     .map((sym) => assets.find((a) => a.symbol === sym))
     .filter((a): a is Asset => Boolean(a));
 
   return (
     <>
+      {stocksLive && (
+        <div className="mb-4 flex justify-end">
+          <LiveDot />
+        </div>
+      )}
       {stocks.error && (
         <div className="mb-6"><ErrorState message={stocks.error} onRetry={stocks.reload} /></div>
       )}
       {stocks.data?.sample && (
         <p className="mb-4 rounded-lg border border-line bg-card px-3 py-2 text-xs text-ink-muted">
-          Stock prices are sample data so the demo always works. Add a free Alpha Vantage
-          key for live quotes on detail pages.
+          Prices shown are sample data.{" "}
+          <a
+            href="https://finnhub.io"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-brand underline hover:opacity-80"
+          >
+            Get a free Finnhub key
+          </a>{" "}
+          (60 calls/min, no card) and add it as <code className="text-ink">VITE_FINNHUB_KEY</code> in your <code className="text-ink">.env</code> to see live stock prices.
         </p>
       )}
 

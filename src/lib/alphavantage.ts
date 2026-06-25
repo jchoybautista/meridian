@@ -1,6 +1,7 @@
 import type { Asset, PricePoint } from "../types";
 import { STOCK_UNIVERSE, seedStock, seedStocks } from "./stockSeed";
-import { getFMPStockList, fmpConfigured, type StockOHLCPoint } from "./fmp";
+import { type StockOHLCPoint } from "./fmp";
+import { finnhubConfigured, getFinnhubStockList } from "./finnhub";
 
 const BASE = "https://www.alphavantage.co/query";
 const KEY = import.meta.env.VITE_ALPHA_VANTAGE_KEY as string | undefined;
@@ -8,7 +9,7 @@ const KEY = import.meta.env.VITE_ALPHA_VANTAGE_KEY as string | undefined;
 export { STOCK_UNIVERSE };
 
 export const avConfigured = Boolean(KEY);
-export const stocksUsingSampleData = !fmpConfigured && !KEY;
+export const stocksUsingSampleData = !finnhubConfigured && !KEY;
 
 interface GlobalQuoteResponse {
   "Global Quote"?: {
@@ -22,12 +23,9 @@ interface GlobalQuoteResponse {
   Information?: string;
 }
 
-/**
- * Returns live stock quotes via FMP when VITE_FMP_KEY is set (250 req/day,
- * cached 3 min), otherwise falls back to curated seed data.
- */
+/** Returns live stock quotes via Finnhub (60 calls/min), falling back to seed data. */
 export async function getStockList(): Promise<{ assets: Asset[]; sample: boolean }> {
-  if (fmpConfigured) return getFMPStockList();
+  if (finnhubConfigured) return getFinnhubStockList();
   return { assets: seedStocks(), sample: true };
 }
 

@@ -19,20 +19,20 @@ import {
 } from "../lib/coingecko";
 import { getBinanceKlines, openKlineStream, binanceSymbol } from "../lib/binance";
 import { getStockQuote, getStockDailyOHLC } from "../lib/alphavantage";
+import { calcStockPerformance, type StockOHLCPoint } from "../lib/fmp";
+import { openStockStream } from "../lib/finnhubWS";
 import {
+  finnhubConfigured,
+  getFinnhubCandles,
   getStockProfile,
-  getStockOHLC,
-  fmpConfigured,
-  calcStockPerformance,
   getAnalystRatings,
   getFinancialHighlights,
   getStockNews,
   type StockProfile,
-  type StockOHLCPoint,
   type AnalystRatings,
   type QuarterlyFinancial,
   type StockNewsItem,
-} from "../lib/fmp";
+} from "../lib/finnhub";
 import { useAsync } from "../hooks/useAsync";
 import { useLiveTicker } from "../hooks/useLiveTicker";
 import { useAuth } from "../context/AuthContext";
@@ -118,8 +118,16 @@ export function AssetDetail() {
     return openKlineStream(cryptoSymbol, cryptoInterval.label, (candle) => setLiveCandle(candle));
   }, [isCrypto, cryptoSymbol, cryptoInterval.label]);
 
-  // ── Live price / 24h stats (Binance ticker WebSocket) ──
+  // ── Live price / 24h stats (Binance ticker WebSocket for crypto) ──
   const liveTicker = useLiveTicker(cryptoSymbol, isCrypto);
+
+  // ── Live stock price (Finnhub WebSocket, during market hours) ──
+  const [liveStockPrice, setLiveStockPrice] = useState<number | null>(null);
+  useEffect(() => {
+    setLiveStockPrice(null);
+    if (isCrypto || !id || !finnhubConfigured) return;
+    return openStockStream(id.toUpperCase(), (tick) => setLiveStockPrice(tick.price));
+  }, [isCrypto, id]);
 
   // ── Crypto info (description, supply, ATL, price changes) ──
   const cryptoInfo = useAsync<CryptoInfo>(async () => {
@@ -127,16 +135,20 @@ export function AssetDetail() {
     return getCryptoInfo(id);
   }, [type, id]);
 
-  // ── Stock OHLC: Twelve Data (multi-interval) → FMP daily fallback ──
+  // ── Stock OHLC: Twelve Data (intraday) → Finnhub daily → AV fallback ──
   const stockOHLC = useAsync<StockOHLCPoint[]>(async () => {
     if (!id || isCrypto) return [];
-    // Twelve Data: real multi-interval candles
+    // Twelve Data: real multi-interval candles (intraday + daily)
     if (tdConfigured && stockInterval.tdInterval) {
       const td = await getStockKlines(id.toUpperCase(), stockInterval.tdInterval);
       if (td.length > 0) return td;
     }
-    // Fallback: FMP daily (all history, used when TD key absent or request failed)
-    if (fmpConfigured) return getStockOHLC(id, "max");
+    // Finnhub: daily candles (1 year)
+    if (finnhubConfigured) {
+      const now = Math.floor(Date.now() / 1000);
+      const candles = await getFinnhubCandles(id.toUpperCase(), "D", now - 365 * 86_400, now);
+      if (candles.length > 0) return candles;
+    }
     return getStockDailyOHLC(id);
   }, [type, id, isCrypto, stockInterval.tdInterval]);
 
@@ -176,10 +188,10 @@ export function AssetDetail() {
     else await add(asset);
   };
 
-  // Prefer live Binance ticker values; fall back to the loaded snapshot.
-  const displayPrice = liveTicker?.price ?? asset?.price ?? 0;
+  // Prefer live values (Binance WS for crypto, Finnhub WS for stocks).
+  const displayPrice = liveTicker?.price ?? liveStockPrice ?? asset?.price ?? 0;
   const displayChange = liveTicker?.changePercent ?? asset?.change24h ?? 0;
-  const isLive = isCrypto && liveTicker !== null;
+  const isLive = (isCrypto && liveTicker !== null) || (!isCrypto && liveStockPrice !== null);
   const trend = changeDirection(displayChange);
 
   const stockCandles: StockOHLCPoint[] = stockOHLC.data ?? [];
@@ -597,21 +609,21 @@ function AboutStock({
 }) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!fmpConfigured) {
+  if (!finnhubConfigured) {
     return (
       <section className="card p-6">
         <h2 className="mb-2 text-lg font-bold">About {asset.name}</h2>
         <p className="text-sm text-ink-muted">
           Add a free{" "}
           <a
-            href="https://financialmodelingprep.com/register"
+            href="https://finnhub.io"
             target="_blank"
             rel="noopener noreferrer"
             className="font-semibold text-brand hover:underline"
           >
-            FMP API key
+            Finnhub API key
           </a>{" "}
-          to see company description, sector, financials, and more.
+          to see company details, financials, analyst ratings, and news.
         </p>
       </section>
     );

@@ -2,13 +2,13 @@ import {
   BarChart, Bar, XAxis, YAxis, Tooltip, Cell, ResponsiveContainer,
 } from "recharts";
 import { useAsync } from "../../hooks/useAsync";
-import { getSectorPerformance } from "../../lib/fmp";
+import { getSectorPerformance } from "../../lib/finnhub";
 import { Panel } from "./Panel";
 
 export function SectorPerformance() {
   const { data, loading } = useAsync(getSectorPerformance, []);
 
-  const sorted = (data ?? []).sort((a, b) => b.changesPercentage - a.changesPercentage);
+  const sorted = [...(data ?? [])].sort((a, b) => b.changesPercentage - a.changesPercentage);
 
   return (
     <Panel title="📊 Sector Performance" subtitle="Today's change by sector">
@@ -16,7 +16,7 @@ export function SectorPerformance() {
         <div className="skeleton h-full min-h-[200px] rounded-lg" aria-hidden="true" />
       ) : sorted.length === 0 ? (
         <div className="flex h-full items-center justify-center text-sm text-ink-muted">
-          Add an FMP key to see sector data
+          Sector data loading…
         </div>
       ) : (
         <ResponsiveContainer width="100%" height="100%">
