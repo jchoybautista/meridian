@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ResponsiveContainer, Treemap } from "recharts";
 import type { Asset } from "../../types";
-import { formatPercent } from "../../lib/format";
+import { formatPercent, formatPrice } from "../../lib/format";
 
 interface Props {
   assets: Asset[];
@@ -12,48 +13,34 @@ interface Node {
   name: string;
   size: number;
   change: number;
+  price: number;
   [key: string]: string | number;
 }
 
-/** Color a tile from the 24h change: green for gains, red for losses. */
+/** Deep red→green ramp by 24h change; tuned dark enough for white text. */
 function tileColor(change: number): string {
-  if (change >= 3) return "#15803d";
-  if (change >= 1) return "#16a34a";
-  if (change > 0) return "#22c55e";
+  if (change >= 5) return "#15803D";
+  if (change >= 2) return "#166534";
+  if (change > 0) return "#15643C";
   if (change === 0) return "#374151";
-  if (change > -1) return "#ef4444";
-  if (change > -3) return "#dc2626";
-  return "#b91c1c";
+  if (change > -2) return "#7F1D1D";
+  if (change > -5) return "#991B1B";
+  return "#B91C1C";
 }
 
-/** WCAG relative luminance of a #rrggbb colour. */
-function luminance(hex: string): number {
-  const h = hex.replace("#", "");
-  const toLin = (c: number) => {
-    const s = c / 255;
-    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
-  };
-  const r = toLin(parseInt(h.slice(0, 2), 16));
-  const g = toLin(parseInt(h.slice(2, 4), 16));
-  const b = toLin(parseInt(h.slice(4, 6), 16));
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-}
-
-const LIGHT_TEXT = "#F8FAFC";
-const DARK_TEXT = "#0A0E1A";
-const DARK_TEXT_LUM = luminance(DARK_TEXT);
-
-/** Pick whichever of light/dark text has the higher contrast against the tile. */
-function textColor(bg: string): string {
-  const l = luminance(bg);
-  const contrastLight = 1.05 / (l + 0.05);
-  const contrastDark = (l + 0.05) / (DARK_TEXT_LUM + 0.05);
-  return contrastLight >= contrastDark ? LIGHT_TEXT : DARK_TEXT;
+interface HoverInfo {
+  name: string;
+  price: number;
+  change: number;
+  marketCap: number;
+  x: number;
+  y: number;
 }
 
 /** Market-cap treemap: tile size = market cap, colour = 24h change. */
 export function Heatmap({ assets }: Props) {
   const navigate = useNavigate();
+  const [hover, setHover] = useState<HoverInfo | null>(null);
 
   const data: Node[] = assets
     .filter((a) => a.marketCap)
@@ -63,19 +50,46 @@ export function Heatmap({ assets }: Props) {
       name: a.symbol,
       size: a.marketCap ?? 0,
       change: a.change24h,
+      price: a.price,
+      marketCap: a.marketCap ?? 0,
     }));
 
   return (
-    <div className="h-full min-h-[220px] w-full">
+    <div className="relative h-full min-h-[220px] w-full">
       <ResponsiveContainer width="100%" height="100%">
         <Treemap
           data={data}
           dataKey="size"
-          stroke="#0A0E1A"
+          stroke="none"
           isAnimationActive={false}
-          content={<TreeCell onSelect={(id) => navigate(`/asset/crypto/${id}`)} />}
+          content={
+            <TreeCell
+              onSelect={(id) => navigate(`/asset/crypto/${id}`)}
+              onHover={setHover}
+            />
+          }
         />
       </ResponsiveContainer>
+
+      {hover && (
+        <div
+          className="pointer-events-none absolute z-20 min-w-[150px] rounded-lg border border-line bg-card/95 px-3 py-2 text-xs shadow-2xl backdrop-blur"
+          style={{
+            left: `min(${hover.x}px, calc(100% - 160px))`,
+            top: Math.max(4, hover.y - 70),
+          }}
+          role="status"
+        >
+          <p className="font-bold">{hover.name}</p>
+          <p className="tabular-nums">{formatPrice(hover.price)}</p>
+          <p className={`tabular-nums ${hover.change >= 0 ? "text-up" : "text-down"}`}>
+            {formatPercent(hover.change)}
+          </p>
+          <p className="text-ink-muted tabular-nums">
+            Mkt Cap {formatPrice(hover.marketCap).replace(/\.\d+/, "")}
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -87,42 +101,49 @@ interface CellProps {
   height?: number;
   name?: string;
   change?: number;
+  price?: number;
+  marketCap?: number;
   id?: string;
   onSelect: (id: string) => void;
+  onHover: (info: HoverInfo | null) => void;
 }
 
-function TreeCell({ x = 0, y = 0, width = 0, height = 0, name, change = 0, id, onSelect }: CellProps) {
-  const showText = width > 44 && height > 28;
+function TreeCell({
+  x = 0, y = 0, width = 0, height = 0,
+  name, change = 0, price = 0, marketCap = 0, id, onSelect, onHover,
+}: CellProps) {
+  const showText = width > 40 && height > 24;
+  const showPrice = width > 96 && height > 56;
   const bg = tileColor(change);
-  const ink = textColor(bg);
   return (
     <g
       onClick={() => id && onSelect(id)}
+      onMouseEnter={() => name && onHover({ name, price, change, marketCap, x: x + width / 2, y })}
+      onMouseLeave={() => onHover(null)}
       style={{ cursor: id ? "pointer" : "default" }}
     >
-      <rect x={x} y={y} width={width} height={height} fill={bg} rx={4} />
+      {/* inset rect → thin gap between tiles instead of a heavy black border */}
+      <rect x={x + 1} y={y + 1} width={Math.max(0, width - 2)} height={Math.max(0, height - 2)} fill={bg} rx={5} />
       {showText && (
         <>
           <text
-            x={x + 6}
-            y={y + 17}
-            fill={ink}
-            fontSize={12}
-            fontWeight={700}
-            style={{ textShadow: "none" }}
+            x={x + 8} y={y + 18} fill="#F8FAFC" fontSize={13} fontWeight={700}
+            style={{ textShadow: "0 1px 2px rgba(0,0,0,.45)" }}
           >
             {name}
           </text>
-          {height > 42 && (
+          <text
+            x={x + 8} y={y + 34} fill="#F8FAFC" fontSize={11} fontWeight={600}
+            style={{ textShadow: "0 1px 2px rgba(0,0,0,.45)" }}
+          >
+            {formatPercent(change)}
+          </text>
+          {showPrice && (
             <text
-              x={x + 6}
-              y={y + 32}
-              fill={ink}
-              fillOpacity={0.85}
-              fontSize={10}
-              style={{ textShadow: "none" }}
+              x={x + 8} y={y + 51} fill="#F8FAFC" fillOpacity={0.85} fontSize={11}
+              style={{ textShadow: "0 1px 2px rgba(0,0,0,.45)" }}
             >
-              {formatPercent(change)}
+              {formatPrice(price)}
             </text>
           )}
         </>
