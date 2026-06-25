@@ -139,15 +139,17 @@ export function HoldingsTable({ holdings, loading, onNavigate }: Props) {
                 return (
                   <React.Fragment key={h.asset_id}>
                     <tr
-                      className="border-b border-line/50 hover:bg-elevated/40 cursor-pointer transition-colors"
-                      onClick={() => {
-                        setExpanded(isOpen ? null : h.asset_id);
-                        onNavigate(h);
-                      }}
+                      className="border-b border-line/50 hover:bg-elevated/40 transition-colors"
+                      onClick={() => setExpanded(isOpen ? null : h.asset_id)}
                       aria-expanded={isOpen}
                     >
                       <td className="px-5 py-3">
-                        <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          className="flex items-center gap-2 text-left hover:opacity-80 transition-opacity"
+                          onClick={(e) => { e.stopPropagation(); onNavigate(h); }}
+                          aria-label={`View ${h.asset_name} detail`}
+                        >
                           <AssetIcon asset={assetForIcon} size={28} />
                           <div>
                             <p className="font-semibold">{h.asset_symbol}</p>
@@ -155,7 +157,7 @@ export function HoldingsTable({ holdings, loading, onNavigate }: Props) {
                               {h.asset_name}
                             </p>
                           </div>
-                        </div>
+                        </button>
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums">
                         {h.quantity.toFixed(4)}
