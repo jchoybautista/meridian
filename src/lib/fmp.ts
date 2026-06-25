@@ -261,3 +261,223 @@ export async function getStockOHLC(
     return [];
   }
 }
+
+// ─── Stock performance (derived from OHLC history) ──────────────────────────
+
+export interface StockPerfStats {
+  change24h: number;
+  change1W?: number;
+  change1M?: number;
+  change1Y?: number;
+}
+
+function findNearestCandle(candles: StockOHLCPoint[], targetSec: number): StockOHLCPoint | undefined {
+  return candles.reduce<StockOHLCPoint | undefined>((best, c) => {
+    if (!best) return c;
+    return Math.abs(c.time - targetSec) < Math.abs(best.time - targetSec) ? c : best;
+  }, undefined);
+}
+
+/** Derive 1W/1M/1Y % change from sorted OHLC candles + live price. Zero extra API calls. */
+export function calcStockPerformance(
+  candles: StockOHLCPoint[],
+  currentPrice: number,
+  change24h: number,
+): StockPerfStats {
+  if (candles.length === 0) return { change24h };
+  const now = Math.floor(Date.now() / 1000);
+  const pct = (c?: StockOHLCPoint) =>
+    c && c.close > 0 ? ((currentPrice - c.close) / c.close) * 100 : undefined;
+  return {
+    change24h,
+    change1W: pct(findNearestCandle(candles, now - 7 * 86400)),
+    change1M: pct(findNearestCandle(candles, now - 30 * 86400)),
+    change1Y: pct(findNearestCandle(candles, now - 365 * 86400)),
+  };
+}
+
+// ─── Analyst ratings ─────────────────────────────────────────────────────────
+
+export interface AnalystRatings {
+  strongBuy: number;
+  buy: number;
+  hold: number;
+  sell: number;
+  strongSell: number;
+  consensus: string; // "Strong Buy" | "Buy" | "Hold" | "Sell" | "Strong Sell"
+}
+
+interface FMPGrade { grade: string; }
+
+export async function getAnalystRatings(symbol: string): Promise<AnalystRatings | null> {
+  if (!KEY) return null;
+  const ck = `meridian:fmp:grades:${symbol}`;
+  try {
+    const cached = localStorage.getItem(ck);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached) as { data: AnalystRatings; ts: number };
+      if (Date.now() - ts < 24 * 60 * 60 * 1000) return data;
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const url = `${BASE}/grade/${symbol}?limit=50&apikey=${KEY}`;
+    const res = await fetch(url, { headers: { accept: "application/json" } });
+    if (!res.ok) throw new Error(`FMP grade ${res.status}`);
+    const data = (await res.json()) as FMPGrade[];
+    if (!Array.isArray(data)) return null;
+
+    const counts = { strongBuy: 0, buy: 0, hold: 0, sell: 0, strongSell: 0 };
+    for (const { grade } of data) {
+      const g = grade.toLowerCase();
+      if (g.includes("strong buy") || g === "outperform" || g === "overweight") counts.strongBuy++;
+      else if (g === "buy" || g === "accumulate") counts.buy++;
+      else if (g === "hold" || g === "neutral" || g === "equal weight" || g === "sector perform") counts.hold++;
+      else if (g === "sell" || g === "underperform" || g === "underweight") counts.sell++;
+      else if (g === "strong sell") counts.strongSell++;
+    }
+    const total = counts.strongBuy + counts.buy + counts.hold + counts.sell + counts.strongSell;
+    if (total === 0) return null;
+
+    const bullish = counts.strongBuy + counts.buy;
+    const bearish = counts.sell + counts.strongSell;
+    let consensus = "Hold";
+    if (bullish / total > 0.6) consensus = bullish / total > 0.8 ? "Strong Buy" : "Buy";
+    else if (bearish / total > 0.6) consensus = bearish / total > 0.8 ? "Strong Sell" : "Sell";
+
+    const result: AnalystRatings = { ...counts, consensus };
+    try { localStorage.setItem(ck, JSON.stringify({ data: result, ts: Date.now() })); } catch { /* ignore */ }
+    return result;
+  } catch { return null; }
+}
+
+// ─── Quarterly financials ────────────────────────────────────────────────────
+
+export interface QuarterlyFinancial {
+  quarter: string; // e.g. "Q1 '25"
+  revenue: number;
+  netIncome: number;
+  eps: number;
+}
+
+interface FMPIncomeStatement {
+  date: string;
+  revenue: number;
+  netIncome: number;
+  eps: number;
+}
+
+export async function getFinancialHighlights(symbol: string): Promise<QuarterlyFinancial[]> {
+  if (!KEY) return [];
+  const ck = `meridian:fmp:income:${symbol}`;
+  try {
+    const cached = localStorage.getItem(ck);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached) as { data: QuarterlyFinancial[]; ts: number };
+      if (Date.now() - ts < 24 * 60 * 60 * 1000) return data;
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const url = `${BASE}/income-statement/${symbol}?period=quarter&limit=4&apikey=${KEY}`;
+    const res = await fetch(url, { headers: { accept: "application/json" } });
+    if (!res.ok) throw new Error(`FMP income ${res.status}`);
+    const data = (await res.json()) as FMPIncomeStatement[];
+    if (!Array.isArray(data)) return [];
+
+    const result: QuarterlyFinancial[] = data
+      .slice(0, 4)
+      .map((s) => {
+        const d = new Date(s.date);
+        const q = `Q${Math.ceil((d.getMonth() + 1) / 3)} '${String(d.getFullYear()).slice(2)}`;
+        return { quarter: q, revenue: s.revenue, netIncome: s.netIncome, eps: s.eps };
+      })
+      .reverse(); // oldest first for chart
+    try { localStorage.setItem(ck, JSON.stringify({ data: result, ts: Date.now() })); } catch { /* ignore */ }
+    return result;
+  } catch { return []; }
+}
+
+// ─── Stock news ──────────────────────────────────────────────────────────────
+
+export interface StockNewsItem {
+  title: string;
+  publishedDate: string;
+  site: string;
+  url: string;
+}
+
+interface FMPNewsItem {
+  title: string;
+  publishedDate: string;
+  site: string;
+  url: string;
+}
+
+export async function getStockNews(symbol: string): Promise<StockNewsItem[]> {
+  if (!KEY) return [];
+  const ck = `meridian:fmp:news:${symbol}`;
+  const TTL = 30 * 60 * 1000;
+  try {
+    const cached = localStorage.getItem(ck);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached) as { data: StockNewsItem[]; ts: number };
+      if (Date.now() - ts < TTL) return data;
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const url = `${BASE}/stock_news?tickers=${symbol}&limit=5&apikey=${KEY}`;
+    const res = await fetch(url, { headers: { accept: "application/json" } });
+    if (!res.ok) throw new Error(`FMP news ${res.status}`);
+    const data = (await res.json()) as FMPNewsItem[];
+    if (!Array.isArray(data)) return [];
+    const result = data.slice(0, 5).map((n) => ({
+      title: n.title,
+      publishedDate: n.publishedDate,
+      site: n.site,
+      url: n.url,
+    }));
+    try { localStorage.setItem(ck, JSON.stringify({ data: result, ts: Date.now() })); } catch { /* ignore */ }
+    return result;
+  } catch { return []; }
+}
+
+// ─── Sector performance ──────────────────────────────────────────────────────
+
+export interface SectorData {
+  sector: string;
+  changesPercentage: number;
+}
+
+interface FMPSector {
+  sector: string;
+  changesPercentage: string; // e.g. "1.23%"
+}
+
+export async function getSectorPerformance(): Promise<SectorData[]> {
+  if (!KEY) return [];
+  const ck = "meridian:fmp:sectors";
+  const TTL = 60 * 60 * 1000;
+  try {
+    const cached = localStorage.getItem(ck);
+    if (cached) {
+      const { data, ts } = JSON.parse(cached) as { data: SectorData[]; ts: number };
+      if (Date.now() - ts < TTL) return data;
+    }
+  } catch { /* ignore */ }
+
+  try {
+    const url = `${BASE}/sector-performance?apikey=${KEY}`;
+    const res = await fetch(url, { headers: { accept: "application/json" } });
+    if (!res.ok) throw new Error(`FMP sectors ${res.status}`);
+    const data = (await res.json()) as FMPSector[];
+    if (!Array.isArray(data)) return [];
+    const result = data.map((s) => ({
+      sector: s.sector,
+      changesPercentage: parseFloat(s.changesPercentage.replace("%", "")),
+    }));
+    try { localStorage.setItem(ck, JSON.stringify({ data: result, ts: Date.now() })); } catch { /* ignore */ }
+    return result;
+  } catch { return []; }
+}
