@@ -30,7 +30,7 @@ export function Dashboard() {
 
   const markets = useAsync(() => getCryptoMarkets(50, 1, true), []);
   const global = useAsync(() => getGlobalStats(), []);
-  const stocks = useAsync(() => getStockList(), []);
+  const stocks = useAsync(() => getStockList(), [], { pollMs: 60_000 });
 
   return (
     <div className="animate-fade-in">

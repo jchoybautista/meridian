@@ -79,7 +79,7 @@ export function AssetDetail() {
     if (!id) throw new Error("Missing asset id.");
     if (isCrypto) return { asset: await getCryptoDetail(id), sample: false };
     return getStockQuote(id);
-  }, [type, id]);
+  }, [type, id], { pollMs: isCrypto ? undefined : 60_000 });
 
   // Binance trading pair for this coin (null if not listed → CoinGecko fallback).
   const cryptoSymbol = isCrypto ? detail.data?.asset?.symbol : undefined;

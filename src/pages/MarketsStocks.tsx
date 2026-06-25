@@ -5,7 +5,7 @@ import { MarketTable } from "../components/markets/MarketTable";
 import { ErrorState, LoadingAnnounce } from "../components/ui/States";
 
 export function MarketsStocks() {
-  const { data, loading, error, reload } = useAsync(() => getStockList(), []);
+  const { data, loading, error, reload } = useAsync(() => getStockList(), [], { pollMs: 60_000 });
 
   return (
     <div className="animate-fade-in">
