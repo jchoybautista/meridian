@@ -1,4 +1,5 @@
 import type { OHLCPoint } from "./coingecko";
+import type { Asset } from "../types";
 
 // ─── Binance public market-data API ───────────────────────────────────────────
 //
@@ -128,6 +129,30 @@ function parseTicker(t: RawTicker): LiveTicker {
     low24h: parseFloat(t.l),
     volume24h: parseFloat(t.q),
   };
+}
+
+/**
+ * Return a new asset list with live price/24h-change (and high/low/volume when
+ * present) overlaid from a symbol→ticker map. Assets without a live tick — and
+ * those not on Binance — pass through unchanged. Pure; safe to memoize.
+ */
+export function overlayLiveTickers(
+  assets: Asset[],
+  live: Map<string, LiveTicker>,
+): Asset[] {
+  if (live.size === 0) return assets;
+  return assets.map((a) => {
+    const t = live.get(a.symbol.toUpperCase());
+    if (!t) return a;
+    return {
+      ...a,
+      price: t.price,
+      change24h: t.changePercent,
+      high24h: t.high24h ?? a.high24h,
+      low24h: t.low24h ?? a.low24h,
+      volume24h: t.volume24h ?? a.volume24h,
+    };
+  });
 }
 
 /** One-shot REST ticker fetch (used as immediate seed and polling fallback). */
