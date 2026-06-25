@@ -16,6 +16,8 @@ export interface Interval {
   note: string;
   /** Sub-daily interval → show time-of-day on the axis. */
   intraday: boolean;
+  /** Twelve Data interval string (stocks only). */
+  tdInterval?: string;
 }
 
 export const CRYPTO_INTERVALS: Interval[] = [
@@ -37,45 +39,52 @@ export const CRYPTO_INTERVALS: Interval[] = [
 ];
 
 export const STOCK_INTERVALS: Interval[] = [
-  { label: "1D",  note: "Daily candles",   intraday: false },
-  { label: "1W",  note: "Weekly candles",  intraday: false },
-  { label: "1M",  note: "Monthly candles", intraday: false },
-  { label: "1Y",  note: "Yearly candles · full history", intraday: false },
+  { label: "15m", tdInterval: "15min",  note: "15-minute candles",            intraday: true  },
+  { label: "1h",  tdInterval: "1h",     note: "1-hour candles",               intraday: true  },
+  { label: "4h",  tdInterval: "4h",     note: "4-hour candles",               intraday: true  },
+  { label: "1D",  tdInterval: "1day",   note: "Daily candles",                intraday: false },
+  { label: "1W",  tdInterval: "1week",  note: "Weekly candles",               intraday: false },
+  { label: "1M",  tdInterval: "1month", note: "Monthly candles · full history", intraday: false },
 ];
 
 export function getIntervalByLabel(label: string, intervals: Interval[]): Interval {
   return intervals.find((i) => i.label === label) ?? intervals[0];
 }
 
-const DEFAULT_PREFERRED = ["15m", "1h", "4h", "1D"];
-const STORAGE_KEY = "meridian:chart:intervals";
-const VALID_LABELS = new Set(CRYPTO_INTERVALS.map((i) => i.label));
-
-function loadPreferred(): string[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return DEFAULT_PREFERRED;
-    const parsed = JSON.parse(raw) as unknown;
-    if (Array.isArray(parsed)) {
-      // Drop any labels no longer offered (e.g. from an earlier interval set).
-      const cleaned = (parsed as string[]).filter((l) => VALID_LABELS.has(l));
-      if (cleaned.length > 0) return cleaned;
-    }
-  } catch { /* ignore */ }
-  return DEFAULT_PREFERRED;
-}
-
-function savePreferred(labels: string[]): void {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(labels)); } catch { /* ignore */ }
-}
+const DEFAULT_CRYPTO_PREFERRED = ["15m", "1h", "4h", "1D"];
+export const DEFAULT_STOCK_PREFERRED  = ["1h", "4h", "1D", "1W"];
+export const CRYPTO_STORAGE_KEY = "meridian:chart:intervals";
+export const STOCK_STORAGE_KEY  = "meridian:chart:stock-intervals";
 
 interface Props {
   value: string;
   onChange: (interval: Interval) => void;
+  intervals?: Interval[];
+  storageKey?: string;
+  defaultPreferred?: string[];
 }
 
-export function IntervalPicker({ value, onChange }: Props) {
-  const [preferred, setPreferred] = useState<string[]>(loadPreferred);
+export function IntervalPicker({
+  value,
+  onChange,
+  intervals = CRYPTO_INTERVALS,
+  storageKey = CRYPTO_STORAGE_KEY,
+  defaultPreferred = DEFAULT_CRYPTO_PREFERRED,
+}: Props) {
+  const [preferred, setPreferred] = useState<string[]>(() => {
+    const validLabels = new Set(intervals.map((i) => i.label));
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return defaultPreferred;
+      const parsed = JSON.parse(raw) as unknown;
+      if (Array.isArray(parsed)) {
+        // Drop any labels no longer offered (e.g. from an earlier interval set).
+        const cleaned = (parsed as string[]).filter((l) => validLabels.has(l));
+        if (cleaned.length > 0) return cleaned;
+      }
+    } catch { /* ignore */ }
+    return defaultPreferred;
+  });
   const [isOpen, setIsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editDraft, setEditDraft] = useState<string[]>([]);
@@ -101,7 +110,7 @@ export function IntervalPicker({ value, onChange }: Props) {
   const isCustomActive = customSlot !== null && value === customSlot;
 
   const selectInterval = (label: string) => {
-    onChange(getIntervalByLabel(label, CRYPTO_INTERVALS));
+    onChange(getIntervalByLabel(label, intervals));
   };
 
   const handleDropdownPick = (label: string) => {
@@ -109,7 +118,7 @@ export function IntervalPicker({ value, onChange }: Props) {
     // Pin it as the 5th slot
     const newPref = [...preferred.slice(0, 4), label];
     setPreferred(newPref);
-    savePreferred(newPref);
+    try { localStorage.setItem(storageKey, JSON.stringify(newPref)); } catch { /* ignore */ }
     setIsOpen(false);
   };
 
@@ -132,16 +141,16 @@ export function IntervalPicker({ value, onChange }: Props) {
   };
 
   const saveDraft = () => {
-    const next = editDraft.length > 0 ? editDraft : DEFAULT_PREFERRED;
+    const next = editDraft.length > 0 ? editDraft : defaultPreferred;
     setPreferred(next);
-    savePreferred(next);
+    try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch { /* ignore */ }
     // If current interval isn't in the new set, switch to first
     if (!next.includes(value)) selectInterval(next[0]);
     setIsEditing(false);
     setIsOpen(false);
   };
 
-  const currentInterval = getIntervalByLabel(value, CRYPTO_INTERVALS);
+  const currentInterval = getIntervalByLabel(value, intervals);
 
   return (
     <div className="relative flex items-center gap-1" ref={panelRef}>
@@ -222,7 +231,7 @@ export function IntervalPicker({ value, onChange }: Props) {
 
           {/* Interval grid (4 columns like Binance) */}
           <div className="grid grid-cols-4 gap-1.5">
-            {CRYPTO_INTERVALS.map((interval) => {
+            {intervals.map((interval) => {
               const isActive = !isEditing && value === interval.label;
               const inDraft = isEditing && editDraft.includes(interval.label);
               const draftFull = isEditing && editDraft.length >= 5 && !inDraft;
@@ -261,8 +270,10 @@ export function IntervalPicker({ value, onChange }: Props) {
           {/* Data note */}
           {!isEditing && (
             <p className="mt-3 text-[10px] leading-relaxed text-ink-muted">
-              {currentInterval.note} · live via Binance.
-              {" "}1W / 1M show full history back to listing.
+              {currentInterval.note}
+              {intervals === CRYPTO_INTERVALS
+                ? " · live via Binance. 1W / 1M show full history back to listing."
+                : " · data via Twelve Data."}
             </p>
           )}
         </div>
