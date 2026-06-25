@@ -27,3 +27,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SDD scratch (subagent-driven-development ledger/handoffs)
+.superpowers/
