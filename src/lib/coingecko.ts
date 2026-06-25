@@ -1,7 +1,9 @@
 import type { Asset, PricePoint } from "../types";
 import { seedByIds, seedDetail, seedMarkets } from "./cryptoSeed";
 
-const BASE = "https://api.coingecko.com/api/v3";
+const BASE = import.meta.env.DEV
+  ? "/cg/api/v3"
+  : "https://api.coingecko.com/api/v3";
 
 /**
  * True once any crypto request has fallen back to cached or seed data because

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { Star, ArrowLeft, ExternalLink, Radio } from "lucide-react";
 import {
@@ -9,7 +9,7 @@ import {
   type CryptoInfo,
 } from "../lib/coingecko";
 import { getBinanceKlines, openKlineStream, binanceSymbol } from "../lib/binance";
-import { getStockChart, getStockQuote } from "../lib/alphavantage";
+import { getStockChart, getStockQuote, getStockDailyOHLC, avConfigured } from "../lib/alphavantage";
 import {
   getStockProfile,
   getStockOHLC,
@@ -116,17 +116,18 @@ export function AssetDetail() {
     return getCryptoInfo(id);
   }, [type, id]);
 
-  // ── Stock chart (area, always available) ──
-  const stockArea = useAsync<PricePoint[]>(async () => {
+  // ── Stock OHLC: FMP first, AV fallback, else synthetic area chart ──
+  const stockOHLC = useAsync<StockOHLCPoint[]>(async () => {
     if (!id || isCrypto) return [];
-    const days = stockPeriod.days === "max" ? 365 : stockPeriod.days;
-    return getStockChart(id, days);
+    if (fmpConfigured) return getStockOHLC(id, stockPeriod.days);
+    return getStockDailyOHLC(id); // AV fallback: last 100 daily bars
   }, [type, id, stockPeriod.days]);
 
-  // ── Stock OHLC (only when FMP key set) ──
-  const stockOHLC = useAsync<StockOHLCPoint[]>(async () => {
-    if (!id || isCrypto || !fmpConfigured) return [];
-    return getStockOHLC(id, stockPeriod.days);
+  // ── Stock area chart (synthetic fallback when no API keys configured) ──
+  const stockArea = useAsync<PricePoint[]>(async () => {
+    if (!id || isCrypto || fmpConfigured || avConfigured) return [];
+    const days = stockPeriod.days === "max" ? 365 : stockPeriod.days;
+    return getStockChart(id, days);
   }, [type, id, stockPeriod.days]);
 
   // ── Stock company profile ──
@@ -161,7 +162,23 @@ export function AssetDetail() {
     return all.filter((c) => c.time >= cutoff);
   })();
 
-  const useStockCandlestick = fmpConfigured && stockCandles.length > 0;
+  const useStockCandlestick = stockCandles.length > 0;
+
+  // Stablecoins (USDT, USDC, etc.) have <5% price range — candlestick looks broken.
+  const isStablecoin = useMemo(() => {
+    if (!ohlc.data || ohlc.data.length === 0) return false;
+    const prices = ohlc.data.flatMap((c) => [c.high, c.low]);
+    const min = Math.min(...prices);
+    const max = Math.max(...prices);
+    const avg = (min + max) / 2;
+    return avg > 0 && (max - min) / avg < 0.05;
+  }, [ohlc.data]);
+
+  // For stablecoins convert OHLC closes to PricePoints (ms timestamps) for the area chart.
+  const stablecoinPriceData = useMemo((): PricePoint[] => {
+    if (!isStablecoin || !ohlc.data) return [];
+    return ohlc.data.map((c) => ({ time: c.time * 1000, price: c.close }));
+  }, [isStablecoin, ohlc.data]);
 
   return (
     <div className="animate-fade-in">
@@ -262,6 +279,8 @@ export function AssetDetail() {
                     <div className="h-[340px] w-full skeleton rounded-lg" aria-hidden="true" />
                   ) : ohlc.error ? (
                     <ErrorState message={ohlc.error} onRetry={ohlc.reload} />
+                  ) : isStablecoin ? (
+                    <PriceChart data={stablecoinPriceData} trend="flat" />
                   ) : ohlc.data.length > 0 ? (
                     <CandlestickChart
                       data={ohlc.data}
@@ -275,15 +294,16 @@ export function AssetDetail() {
                     </div>
                   )}
                   <p className="mt-2 text-[10px] text-ink-muted">
-                    {cryptoInterval.note} ·{" "}
-                    {onBinance
-                      ? "Live via Binance · scroll & pinch to zoom"
-                      : "Data: CoinGecko (last 365 days — not on Binance)"}
+                    {isStablecoin
+                      ? "Stablecoin — price is pegged to USD · Last 365 days"
+                      : `${cryptoInterval.note} · ${onBinance ? "Live via Binance · scroll & pinch to zoom" : "Data: CoinGecko (last 365 days — not on Binance)"}`}
                   </p>
                 </>
+              ) : stockOHLC.loading ? (
+                <div className="h-[340px] w-full skeleton rounded-lg" aria-hidden="true" />
               ) : useStockCandlestick ? (
                 <CandlestickChart
-                  data={stockCandles}
+                  data={stockCandles as OHLCPoint[]}
                   trend={trend}
                 />
               ) : stockArea.data && stockArea.data.length > 0 ? (
