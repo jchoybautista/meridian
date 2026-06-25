@@ -37,13 +37,46 @@ export interface WatchlistItem {
   created_at: string;
 }
 
-export interface PortfolioHolding {
+export interface Transaction {
   id: string;
   user_id: string;
+  asset_id: string;
   asset_symbol: string;
   asset_name: string;
   asset_type: AssetType;
-  asset_id: string | null;
+  type: "buy" | "sell";
   quantity: number;
+  price_per_unit: number;
+  transacted_at: string; // "YYYY-MM-DD"
+  notes?: string | null;
   created_at: string;
+}
+
+export interface PriceInfo {
+  price: number;
+  change24h: number;
+}
+
+export interface HoldingWithPnL {
+  asset_id: string;
+  asset_symbol: string;
+  asset_name: string;
+  asset_type: AssetType;
+  quantity: number;
+  avgCost: number;
+  currentPrice: number;
+  marketValue: number;
+  unrealizedPnL: number;
+  unrealizedPct: number;
+  realizedPnL: number;
+  change24h: number;
+  transactions: Transaction[];
+}
+
+export interface PortfolioSummary {
+  totalValue: number;
+  totalUnrealized: number;
+  totalRealized: number;
+  dailyChange: number;
+  dailyChangePct: number;
 }
