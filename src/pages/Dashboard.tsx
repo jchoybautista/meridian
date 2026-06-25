@@ -16,6 +16,8 @@ import { FeaturedCoin } from "../components/dashboard/FeaturedCoin";
 import { ExploreAssets } from "../components/dashboard/ExploreAssets";
 import { Heatmap } from "../components/charts/Heatmap";
 import { DominancePie } from "../components/charts/DominancePie";
+import { LiveDot } from "../components/ui/LiveDot";
+import { useLiveAssets } from "../hooks/useLiveAssets";
 import type { Asset } from "../types";
 
 type Tab = "crypto" | "stocks";
@@ -78,7 +80,8 @@ type GlobalState = ReturnType<typeof useAsync<Awaited<ReturnType<typeof getGloba
 type StocksState = ReturnType<typeof useAsync<Awaited<ReturnType<typeof getStockList>>>>;
 
 function CryptoBoard({ markets, global }: { markets: MarketsState; global: GlobalState }) {
-  const assets = markets.data ?? [];
+  const snapshot = markets.data ?? [];
+  const { assets, isLive } = useLiveAssets(snapshot);
   const btc = assets.find((a) => a.id === "bitcoin");
   const eth = assets.find((a) => a.id === "ethereum");
   const dominance = global.data?.dominance ?? computeDominance(assets);
@@ -87,21 +90,28 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
 
   return (
     <>
-      {global.data && (
-        <dl className="mb-4 flex flex-wrap gap-x-6 gap-y-2 text-sm">
-          {totalMarketCap !== undefined && (
-            <div>
-              <dt className="text-xs text-ink-muted">Total Market Cap</dt>
-              <dd className="font-bold tabular-nums">{formatCompactUsd(totalMarketCap)}</dd>
-            </div>
+      {(global.data || isLive) && (
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          {global.data ? (
+            <dl className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+              {totalMarketCap !== undefined && (
+                <div>
+                  <dt className="text-xs text-ink-muted">Total Market Cap</dt>
+                  <dd className="font-bold tabular-nums">{formatCompactUsd(totalMarketCap)}</dd>
+                </div>
+              )}
+              {marketCapChange24h !== undefined && (
+                <div>
+                  <dt className="text-xs text-ink-muted">24h</dt>
+                  <dd className="font-bold"><ChangeBadge value={marketCapChange24h} /></dd>
+                </div>
+              )}
+            </dl>
+          ) : (
+            <span />
           )}
-          {marketCapChange24h !== undefined && (
-            <div>
-              <dt className="text-xs text-ink-muted">24h</dt>
-              <dd className="font-bold"><ChangeBadge value={marketCapChange24h} /></dd>
-            </div>
-          )}
-        </dl>
+          {isLive && <LiveDot />}
+        </div>
       )}
 
       {markets.error && (
