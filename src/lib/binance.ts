@@ -58,13 +58,15 @@ export function binanceSymbol(symbol: string): string | null {
 
 type RawKline = [number, string, string, string, string, ...unknown[]];
 
-function klineToPoint(k: RawKline): OHLCPoint {
+export function klineToPoint(k: RawKline): OHLCPoint {
   return {
     time: Math.floor(k[0] / 1000), // openTime ms → unix seconds
     open: parseFloat(k[1]),
     high: parseFloat(k[2]),
     low: parseFloat(k[3]),
     close: parseFloat(k[4]),
+    volume: parseFloat(k[5] as string),
+    quoteVolume: parseFloat(k[7] as string),
   };
 }
 
@@ -228,6 +230,8 @@ interface RawKlineMsg {
     h: string;
     l: string;
     c: string;
+    v: string; // base volume
+    q: string; // quote volume
     x: boolean; // is this candle closed?
   };
 }
@@ -271,6 +275,8 @@ export function openKlineStream(
             high: parseFloat(k.h),
             low: parseFloat(k.l),
             close: parseFloat(k.c),
+            volume: parseFloat(k.v),
+            quoteVolume: parseFloat(k.q),
           },
           k.x,
         );

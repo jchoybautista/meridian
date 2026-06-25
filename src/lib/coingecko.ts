@@ -174,6 +174,10 @@ export interface OHLCPoint {
   high: number;
   low: number;
   close: number;
+  /** Base-asset volume for the candle (tooltip "Vol"). */
+  volume?: number;
+  /** Quote-asset turnover for the candle (tooltip "Txn"). */
+  quoteVolume?: number;
 }
 
 /** Descriptive info about a coin (separate heavier call, cached). */
