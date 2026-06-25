@@ -13,6 +13,7 @@ import { TopMovers } from "../components/dashboard/TopMovers";
 import { LatestTransactions } from "../components/dashboard/LatestTransactions";
 import { LatestBlocks } from "../components/dashboard/LatestBlocks";
 import { FeaturedCoin } from "../components/dashboard/FeaturedCoin";
+import { FearGreedGauge } from "../components/dashboard/FearGreedGauge";
 import { ExploreAssets } from "../components/dashboard/ExploreAssets";
 import { Heatmap } from "../components/charts/Heatmap";
 import { DominancePie } from "../components/charts/DominancePie";
@@ -136,7 +137,7 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
         <LatestTransactions />
       </div>
 
-      <div className={`mb-8 ${ROW}`}>
+      <div className={`mb-4 ${ROW}`}>
         <Panel title="Charts" subtitle="Market Dominance">
           {dominance.length > 0 ? (
             <DominancePie data={dominance} />
@@ -147,6 +148,13 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
         {eth ? <FeaturedCoin asset={eth} /> : <PanelSkeleton title="Ethereum" />}
         {btc ? <FeaturedCoin asset={btc} /> : <PanelSkeleton title="Bitcoin" />}
         <LatestBlocks />
+      </div>
+
+      <div className={`mb-8 ${ROW}`}>
+        <FearGreedGauge />
+        <PanelSkeleton title="Trending" />
+        <PanelSkeleton title="More" />
+        <PanelSkeleton title="More" />
       </div>
 
       {assets.length > 0 && (
