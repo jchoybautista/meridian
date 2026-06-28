@@ -33,9 +33,14 @@ export default {
         shimmer: {
           "100%": { transform: "translateX(100%)" },
         },
+        marquee: {
+          "0%": { transform: "translateX(0%)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "fade-in": "fade-in 0.3s ease-out",
+        marquee: "marquee 24s linear infinite",
       },
     },
   },
