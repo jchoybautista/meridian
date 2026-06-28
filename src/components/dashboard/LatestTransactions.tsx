@@ -1,11 +1,15 @@
 import { useAsync } from "../../hooks/useAsync";
-import { getLatestTransactions } from "../../lib/mempool";
+import { getLatestTransactions, sampleTxs } from "../../lib/mempool";
 import { Panel } from "./Panel";
 import { formatNumber } from "../../lib/format";
 
 /** Recent unconfirmed Bitcoin transactions from mempool.space. */
 export function LatestTransactions() {
-  const { data, loading } = useAsync(() => getLatestTransactions(8), []);
+  const { data, loading } = useAsync(
+    () => getLatestTransactions(8),
+    [],
+    { initialData: { txs: sampleTxs(8), sample: true } },
+  );
 
   return (
     <Panel title="Latest Transactions" subtitle="Bitcoin mempool">

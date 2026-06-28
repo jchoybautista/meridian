@@ -1,6 +1,6 @@
 import { Box } from "lucide-react";
 import { useAsync } from "../../hooks/useAsync";
-import { getLatestBlocks } from "../../lib/mempool";
+import { getLatestBlocks, sampleBlocks } from "../../lib/mempool";
 import { Panel } from "./Panel";
 
 function timeAgo(unixSeconds: number): string {
@@ -12,7 +12,11 @@ function timeAgo(unixSeconds: number): string {
 
 /** Recent Bitcoin blocks from mempool.space. */
 export function LatestBlocks() {
-  const { data, loading } = useAsync(() => getLatestBlocks(5), []);
+  const { data, loading } = useAsync(
+    () => getLatestBlocks(5),
+    [],
+    { initialData: { blocks: sampleBlocks(5), sample: true } },
+  );
 
   return (
     <Panel title="Latest Blocks" subtitle="Bitcoin">

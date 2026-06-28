@@ -31,7 +31,7 @@ interface MempoolRecentTx {
 
 const SATS = 100_000_000;
 
-function fetchWithTimeout(url: string, ms = 5000): Promise<Response> {
+function fetchWithTimeout(url: string, ms = 3000): Promise<Response> {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), ms);
   return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(id));
@@ -76,7 +76,7 @@ export async function getLatestTransactions(limit = 8): Promise<{ txs: TxSummary
   }
 }
 
-function sampleBlocks(limit: number): BlockSummary[] {
+export function sampleBlocks(limit: number): BlockSummary[] {
   const base = 955_191;
   const now = Math.floor(Date.now() / 1000);
   return Array.from({ length: limit }, (_, i) => ({
@@ -87,7 +87,7 @@ function sampleBlocks(limit: number): BlockSummary[] {
   }));
 }
 
-function sampleTxs(limit: number): TxSummary[] {
+export function sampleTxs(limit: number): TxSummary[] {
   return Array.from({ length: limit }, (_, i) => ({
     txid: (Math.abs(Math.sin(i + 1)) * 1e16).toString(16).slice(0, 12),
     valueBtc: +(0.0001 + (Math.abs(Math.cos(i)) * 0.002)).toFixed(8),

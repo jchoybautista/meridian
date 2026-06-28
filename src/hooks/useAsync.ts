@@ -7,9 +7,11 @@ interface AsyncState<T> {
   reload: () => void;
 }
 
-interface AsyncOptions {
+interface AsyncOptions<T> {
   /** When set, silently refetch on this interval while the tab is visible. */
   pollMs?: number;
+  /** Seed data shown immediately on first render before the fetch completes. */
+  initialData?: T;
 }
 
 /**
@@ -21,11 +23,11 @@ interface AsyncOptions {
 export function useAsync<T>(
   fn: () => Promise<T>,
   deps: unknown[],
-  options: AsyncOptions = {},
+  options: AsyncOptions<T> = {},
 ): AsyncState<T> {
-  const { pollMs } = options;
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { pollMs, initialData } = options;
+  const [data, setData] = useState<T | null>(initialData ?? null);
+  const [loading, setLoading] = useState(!initialData);
   const [error, setError] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
 
