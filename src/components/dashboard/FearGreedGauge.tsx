@@ -45,7 +45,7 @@ function GaugeArc({ value }: { value: number }) {
     <svg
       viewBox="0 0 200 115"
       aria-hidden="true"
-      className="w-full max-w-[200px]"
+      className="w-full max-w-[320px]"
     >
       {/* Track (background arc) */}
       <path
@@ -76,11 +76,11 @@ function GaugeArc({ value }: { value: number }) {
       {/* Numeric value */}
       <text
         x={cx}
-        y={cy - 10}
+        y={cy - 8}
         textAnchor="middle"
         dominantBaseline="auto"
         fill={color}
-        fontSize="28"
+        fontSize="34"
         fontWeight="800"
         fontFamily="inherit"
       >
@@ -103,17 +103,17 @@ export function FearGreedGauge() {
         </div>
       ) : data ? (
         <div
-          className="flex h-full flex-col items-center justify-center gap-1 pb-2"
+          className="flex h-full flex-col items-center justify-center gap-2 px-4 pb-2"
           aria-label={`Fear and Greed Index: ${data.value} — ${data.classification}`}
         >
           <GaugeArc value={data.value} />
           <p
-            className="text-sm font-bold"
+            className="text-base font-bold sm:text-lg"
             style={{ color: fgColor(data.value) }}
           >
             {data.classification}
           </p>
-          <p className="text-[10px] text-ink-muted">Updated daily · Alternative.me</p>
+          <p className="text-xs text-ink-muted">Updated daily · Alternative.me</p>
         </div>
       ) : (
         <div className="flex h-full items-center justify-center text-sm text-ink-muted">

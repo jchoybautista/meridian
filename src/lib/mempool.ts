@@ -31,10 +31,16 @@ interface MempoolRecentTx {
 
 const SATS = 100_000_000;
 
+function fetchWithTimeout(url: string, ms = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), ms);
+  return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(id));
+}
+
 /** Recent Bitcoin blocks. */
 export async function getLatestBlocks(limit = 5): Promise<{ blocks: BlockSummary[]; sample: boolean }> {
   try {
-    const res = await fetch(`${BASE}/v1/blocks`);
+    const res = await fetchWithTimeout(`${BASE}/v1/blocks`);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = (await res.json()) as MempoolBlock[];
     return {
@@ -54,7 +60,7 @@ export async function getLatestBlocks(limit = 5): Promise<{ blocks: BlockSummary
 /** Recent mempool (unconfirmed) transactions. */
 export async function getLatestTransactions(limit = 8): Promise<{ txs: TxSummary[]; sample: boolean }> {
   try {
-    const res = await fetch(`${BASE}/mempool/recent`);
+    const res = await fetchWithTimeout(`${BASE}/mempool/recent`);
     if (!res.ok) throw new Error(`status ${res.status}`);
     const data = (await res.json()) as MempoolRecentTx[];
     return {
