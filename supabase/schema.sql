@@ -46,3 +46,47 @@ create policy "Users manage their own transactions"
   on public.portfolio_transactions for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Paper trading wallet -------------------------------------------------------
+create table if not exists public.paper_wallet (
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid references auth.users not null unique,
+  balance_usd numeric not null default 10000,
+  created_at  timestamptz default now()
+);
+
+alter table public.paper_wallet enable row level security;
+
+create policy "Users manage their own wallet"
+  on public.paper_wallet for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- Paper trading orders -------------------------------------------------------
+create table if not exists public.paper_orders (
+  id           uuid primary key default gen_random_uuid(),
+  user_id      uuid references auth.users not null,
+  asset_id     text not null,
+  asset_type   text not null check (asset_type in ('crypto', 'stock')),
+  asset_symbol text not null,
+  asset_name   text not null,
+  side         text not null check (side in ('buy', 'sell')),
+  order_type   text not null check (order_type in ('limit', 'market', 'stop-limit')),
+  quantity     numeric not null check (quantity > 0),
+  price        numeric,
+  stop_price   numeric,
+  tp_price     numeric,
+  sl_price     numeric,
+  leverage     numeric not null default 1,
+  status       text not null default 'pending' check (status in ('pending', 'filled', 'cancelled')),
+  filled_price numeric,
+  filled_at    timestamptz,
+  created_at   timestamptz default now()
+);
+
+alter table public.paper_orders enable row level security;
+
+create policy "Users manage their own orders"
+  on public.paper_orders for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
