@@ -54,7 +54,7 @@ function mapBar(b: TDBar): StockOHLCPoint | null {
     high:   parseFloat(b.high),
     low:    parseFloat(b.low),
     close:  parseFloat(b.close),
-    volume: parseFloat(b.volume) || undefined,
+    volume: Number.isNaN(parseFloat(b.volume)) ? undefined : parseFloat(b.volume),
   };
 }
 

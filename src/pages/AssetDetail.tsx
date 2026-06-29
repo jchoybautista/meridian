@@ -242,7 +242,9 @@ export function AssetDetail() {
       {!asset ? (
         <div className="card p-8 text-ink-muted" role="status">Loading asset…</div>
       ) : (
-        <>
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
+          {/* ── Main content (left column) ── */}
+          <div>
           {/* ── Header ── */}
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -511,8 +513,13 @@ export function AssetDetail() {
           {!isCrypto && (
             <AboutStock profile={stockProfile.data ?? undefined} loading={stockProfile.loading} asset={asset} />
           )}
-          <TradingPanel asset={asset} currentPrice={displayPrice} />
-        </>
+          </div>{/* end left column */}
+
+          {/* ── Right column: sticky trading panel ── */}
+          <div className="sticky top-6">
+            <TradingPanel asset={asset} currentPrice={displayPrice} />
+          </div>
+        </div>
       )}
     </div>
   );

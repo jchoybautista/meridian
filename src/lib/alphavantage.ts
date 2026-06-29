@@ -105,7 +105,8 @@ function syntheticOHLC(base: number, points: number): StockOHLCPoint[] {
     const open = +(close + Math.sin(i * 1.7) * close * bodyPct).toFixed(2);
     const high = +(Math.max(open, close) + Math.abs(Math.sin(i * 2.3)) * close * wickPct).toFixed(2);
     const low = +(Math.min(open, close) - Math.abs(Math.sin(i * 3.1)) * close * wickPct).toFixed(2);
-    out.push({ time: Math.floor(now / 1000) - i * DAY, open, high, low, close });
+    const volume = Math.round(base * (0.8 + Math.abs(Math.sin(i * 0.9)) * 2.4) * 1_000);
+    out.push({ time: Math.floor(now / 1000) - i * DAY, open, high, low, close, volume });
   }
   return out;
 }
