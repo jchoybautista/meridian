@@ -425,3 +425,76 @@ export function openKlineStream(
     }
   };
 }
+
+// ─── Order Book ───────────────────────────────────────────────────────────────
+
+export interface DepthLevel {
+  price: number;
+  quantity: number;
+}
+
+export interface DepthBook {
+  bids: DepthLevel[]; // sorted desc — highest bid first
+  asks: DepthLevel[]; // sorted asc — lowest ask first
+}
+
+/**
+ * Subscribes to Binance's 20-level depth stream for `symbol` at 100 ms updates.
+ * Returns a cleanup function. Reconnects automatically on close.
+ * If the symbol has no Binance pair, returns a no-op cleanup immediately.
+ */
+export function openDepthStream(
+  symbol: string,
+  onUpdate: (book: DepthBook) => void,
+): () => void {
+  const pair = binanceSymbol(symbol);
+  if (!pair) return () => {};
+
+  const url = `${WS}/${pair.toLowerCase()}@depth20@100ms`;
+  let ws: WebSocket | null = null;
+  let closed = false;
+
+  function connect() {
+    if (closed) return;
+    ws = new WebSocket(url);
+    ws.onmessage = (evt) => {
+      try {
+        const raw = JSON.parse(evt.data as string) as {
+          bids: [string, string][];
+          asks: [string, string][];
+        };
+        onUpdate({
+          bids: raw.bids.slice(0, 10).map(([p, q]) => ({ price: +p, quantity: +q })),
+          asks: raw.asks.slice(0, 10).map(([p, q]) => ({ price: +p, quantity: +q })),
+        });
+      } catch { /* ignore malformed frames */ }
+    };
+    ws.onerror = () => {};
+    ws.onclose = () => { if (!closed) setTimeout(connect, 3000); };
+  }
+
+  connect();
+  return () => { closed = true; ws?.close(); };
+}
+
+/** Deterministic hash in [0, 1) — safe against float overflow for typical seeds. */
+function pseudoRand(n: number): number {
+  return (Math.abs(Math.sin(n)) * 10000) % 1;
+}
+
+/**
+ * Builds a 10-level simulated order book for stocks (or as a crypto fallback).
+ * `seed` should be `Math.floor(Date.now() / 2000)` to jitter every 2 seconds.
+ */
+export function buildSimulatedBook(currentPrice: number, seed: number): DepthBook {
+  const asks: DepthLevel[] = [];
+  const bids: DepthLevel[] = [];
+  for (let i = 0; i < 10; i++) {
+    const spread = currentPrice * (0.0005 + i * 0.0003);
+    asks.push({ price: currentPrice + spread, quantity: 50 + Math.floor(pseudoRand(seed + i * 13) * 900) });
+    bids.push({ price: currentPrice - spread, quantity: 50 + Math.floor(pseudoRand(seed + i * 17 + 50) * 900) });
+  }
+  asks.sort((a, b) => a.price - b.price);
+  bids.sort((a, b) => b.price - a.price);
+  return { asks, bids };
+}
