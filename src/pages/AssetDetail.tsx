@@ -244,7 +244,7 @@ export function AssetDetail() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
           {/* ── Main content (left column) ── */}
-          <div>
+          <div className="min-w-0">
           {/* ── Header ── */}
           <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -798,7 +798,7 @@ function FinancialChart({ data }: { data: QuarterlyFinancial[] }) {
         </ResponsiveContainer>
       </div>
       {/* EPS row */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {data.map((d) => (
           <div key={d.quarter} className="rounded-lg bg-elevated p-3 text-center">
             <p className="text-[10px] text-ink-muted">{d.quarter}</p>

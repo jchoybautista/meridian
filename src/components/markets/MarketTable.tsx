@@ -60,8 +60,8 @@ export function MarketTable({ assets, variant }: Props) {
       </div>
 
       <div className="card overflow-hidden">
-        {/* Desktop table */}
-        <table className="hidden w-full text-left text-sm md:table">
+        {/* Desktop table — only visible at lg+ where content area (~720px) fits all columns */}
+        <table className="hidden w-full text-left text-sm lg:table">
           <thead className="border-b border-line text-xs uppercase tracking-wide text-ink-muted">
             <tr>
               <th scope="col" className="px-4 py-3">
@@ -111,8 +111,8 @@ export function MarketTable({ assets, variant }: Props) {
           </tbody>
         </table>
 
-        {/* Mobile cards */}
-        <ul className="divide-y divide-line md:hidden">
+        {/* Mobile/tablet cards — shown below lg */}
+        <ul className="divide-y divide-line lg:hidden">
           {rows.map((a) => (
             <li key={a.id}>
               <Link to={`/asset/${a.type}/${a.id}`} className="flex items-center gap-3 p-3 hover:bg-elevated">
