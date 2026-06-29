@@ -5,6 +5,7 @@ import {
   Star,
   Wallet,
   PiggyBank,
+  Receipt,
   type LucideIcon,
 } from "lucide-react";
 
@@ -23,4 +24,5 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/watchlist", label: "Watchlist", icon: Star, protected: true },
   { to: "/portfolio", label: "Portfolio", icon: Wallet, protected: true },
   { to: "/wallet", label: "Wallet", icon: PiggyBank, protected: true },
+  { to: "/transactions", label: "Transactions", icon: Receipt, protected: true },
 ];
