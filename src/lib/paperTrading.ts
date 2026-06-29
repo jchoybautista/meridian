@@ -61,11 +61,12 @@ export interface NewOrder {
 
 export async function getOrCreateWallet(userId: string): Promise<PaperWallet> {
   if (!supabase) throw new Error("Supabase not configured");
-  const { data: existing } = await supabase
+  const { data: existing, error: lookupError } = await supabase
     .from("paper_wallet")
     .select("*")
     .eq("user_id", userId)
     .maybeSingle();
+  if (lookupError) throw lookupError;
   if (existing) return existing as PaperWallet;
   const { data, error } = await supabase
     .from("paper_wallet")
@@ -170,6 +171,7 @@ export function derivePositions(orders: PaperOrder[]): Position[] {
   >();
 
   for (const o of orders.filter((o) => o.status === "filled")) {
+    if (o.filled_price == null) continue;
     const entry = map.get(o.asset_id) ?? {
       asset_id: o.asset_id,
       asset_type: o.asset_type,
@@ -180,10 +182,10 @@ export function derivePositions(orders: PaperOrder[]): Position[] {
     };
     if (o.side === "buy") {
       entry.quantity += o.quantity;
-      entry.total_cost += (o.filled_price! * o.quantity) / o.leverage;
+      entry.total_cost += (o.filled_price * o.quantity) / o.leverage;
     } else {
       entry.quantity -= o.quantity;
-      entry.total_cost -= o.filled_price! * o.quantity;
+      entry.total_cost -= (o.filled_price * o.quantity) / o.leverage;
     }
     map.set(o.asset_id, entry);
   }

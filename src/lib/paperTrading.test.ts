@@ -66,6 +66,12 @@ describe("derivePositions", () => {
     expect(pos.avg_cost).toBeCloseTo(50);
   });
 
+  it("leveraged buy then leveraged sell at same price leaves empty positions", () => {
+    const buy: PaperOrder = { ...base, id: "o1", leverage: 2, quantity: 1, filled_price: 100, side: "buy" };
+    const sell: PaperOrder = { ...base, id: "o2", leverage: 2, quantity: 1, filled_price: 100, side: "sell" };
+    expect(derivePositions([buy, sell])).toHaveLength(0);
+  });
+
   it("handles two different assets independently", () => {
     const eth: PaperOrder = { ...base, id: "o2", asset_id: "ethereum", asset_symbol: "ETH", filled_price: 3000 };
     const positions = derivePositions([base, eth]);
