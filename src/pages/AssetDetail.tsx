@@ -60,7 +60,7 @@ import {
   formatPrice,
 } from "../lib/format";
 import type { Asset, AssetType, PricePoint } from "../types";
-
+import { TradingPanel } from "../components/trading/TradingPanel";
 
 function formatDate(iso?: string | null): string {
   if (!iso) return "—";
@@ -176,7 +176,18 @@ export function AssetDetail() {
     return getStockNews(id.toUpperCase());
   }, [type, id]);
 
-  if (detail.error) return <ErrorState message={detail.error} onRetry={detail.reload} />;
+  if (detail.error) return (
+    <div>
+      <Link
+        to={isCrypto ? "/markets/crypto" : "/markets/stocks"}
+        className="mb-6 inline-flex items-center gap-1.5 text-sm text-ink-muted hover:text-ink"
+      >
+        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+        Back to markets
+      </Link>
+      <ErrorState message={detail.error} onRetry={detail.reload} />
+    </div>
+  );
 
   const asset = detail.data?.asset;
   const watched = asset ? isWatched(asset.id) : false;
@@ -500,6 +511,7 @@ export function AssetDetail() {
           {!isCrypto && (
             <AboutStock profile={stockProfile.data ?? undefined} loading={stockProfile.loading} asset={asset} />
           )}
+          <TradingPanel asset={asset} currentPrice={displayPrice} />
         </>
       )}
     </div>
