@@ -106,8 +106,9 @@ function AddFundsModal({
 
         {/* Custom amount */}
         <div className="mb-4">
-          <label className="mb-1 block text-xs text-ink-muted">Amount (USD)</label>
+          <label htmlFor="add-funds-amount" className="mb-1 block text-xs text-ink-muted">Amount (USD)</label>
           <input
+            id="add-funds-amount"
             type="number"
             step="any"
             min={10}
@@ -160,7 +161,7 @@ function OrderRow({ order }: { order: PaperOrder }) {
   return (
     <tr className="border-b border-line text-sm">
       <td className="py-2 pr-3 text-xs text-ink-muted tabular-nums">
-        {new Date(order.created_at).toLocaleDateString("en-US", {
+        {new Date(order.created_at).toLocaleString("en-US", {
           month: "short",
           day: "numeric",
           hour: "2-digit",

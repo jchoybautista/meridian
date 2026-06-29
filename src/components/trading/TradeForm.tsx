@@ -44,6 +44,11 @@ export function TradeForm({ asset, currentPrice, wallet, positions, onPlaceOrder
     }
   }, [currentPrice, orderType]);
 
+  // Reset price when asset changes to prevent stale limit price from a previous asset
+  useEffect(() => {
+    setPrice(currentPrice > 0 ? currentPrice.toFixed(2) : "");
+  }, [asset.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const effectivePrice = orderType === "market" ? currentPrice : parseFloat(price) || 0;
   const effectiveLeverage = asset.type === "crypto" && marginEnabled ? leverage : 1;
   const balance = wallet?.balance_usd ?? 0;
@@ -135,6 +140,8 @@ export function TradeForm({ asset, currentPrice, wallet, positions, onPlaceOrder
         {/* Toast notification */}
         {toast && (
           <div
+            role="status"
+            aria-live="polite"
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-sm ${
               toast.type === "success" ? "bg-up/15 text-up" : "bg-down/15 text-down"
             }`}
@@ -341,6 +348,7 @@ export function TradeForm({ asset, currentPrice, wallet, positions, onPlaceOrder
                   />
                 </div>
               )}
+              <p className="text-[10px] text-ink-muted mt-1">TP/SL prices are saved with your order.</p>
             </div>
           )}
         </div>

@@ -109,8 +109,8 @@ export function OrderBook({ assetType, symbol, currentPrice }: Props) {
       {/* Asks — reversed so the lowest ask is nearest the mid-price row */}
       <ul className="flex-1 overflow-hidden">
         {book
-          ? [...book.asks].reverse().map((level, i) => (
-              <DepthRow key={i} level={level} maxQty={maxQty} side="ask" />
+          ? [...book.asks].reverse().map((level) => (
+              <DepthRow key={level.price.toFixed(8)} level={level} maxQty={maxQty} side="ask" />
             ))
           : Array.from({ length: 10 }, (_, i) => skeletonRow(i))}
       </ul>
@@ -134,8 +134,8 @@ export function OrderBook({ assetType, symbol, currentPrice }: Props) {
       {/* Bids */}
       <ul className="flex-1 overflow-hidden">
         {book
-          ? book.bids.map((level, i) => (
-              <DepthRow key={i} level={level} maxQty={maxQty} side="bid" />
+          ? book.bids.map((level) => (
+              <DepthRow key={level.price.toFixed(8)} level={level} maxQty={maxQty} side="bid" />
             ))
           : Array.from({ length: 10 }, (_, i) => skeletonRow(i + 10))}
       </ul>
