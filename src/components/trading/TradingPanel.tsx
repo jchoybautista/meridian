@@ -41,7 +41,7 @@ export function TradingPanel({ asset, currentPrice }: Props) {
 
           {/* Open orders for this asset */}
           {pendingForAsset.length > 0 && (
-            <div className="border-t border-line p-3">
+            <div className="border-t border-line p-4">
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                 Open Orders
               </h4>
