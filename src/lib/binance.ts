@@ -104,6 +104,51 @@ export async function getBinanceKlines(
     });
 }
 
+// ─── Multi-symbol REST ticker snapshot ────────────────────────────────────────
+
+export interface BinanceTicker {
+  symbol: string;   // e.g. "BTCUSDT"
+  base: string;     // e.g. "BTC"
+  price: number;
+  changePercent: number;
+  volume24h: number; // quote (USDT) volume
+  high24h: number;
+  low24h: number;
+}
+
+const DEFAULT_PAIRS = [
+  "BTCUSDT", "ETHUSDT", "BNBUSDT", "SOLUSDT", "XRPUSDT",
+  "DOGEUSDT", "ADAUSDT", "AVAXUSDT", "LINKUSDT", "DOTUSDT",
+];
+
+/** Fetch 24h stats for a list of Binance USDT pairs in one REST call. */
+export async function getBinanceTickers(
+  pairs: string[] = DEFAULT_PAIRS,
+): Promise<BinanceTicker[]> {
+  const encoded = encodeURIComponent(JSON.stringify(pairs));
+  const res = await fetch(`${REST}/ticker/24hr?symbols=${encoded}`, {
+    headers: { accept: "application/json" },
+  });
+  if (!res.ok) throw new Error(`Binance ticker ${res.status}`);
+  const data = await res.json() as Array<{
+    symbol: string;
+    lastPrice: string;
+    priceChangePercent: string;
+    quoteVolume: string;
+    highPrice: string;
+    lowPrice: string;
+  }>;
+  return data.map((t) => ({
+    symbol: t.symbol,
+    base: t.symbol.replace(/USDT$/, ""),
+    price: parseFloat(t.lastPrice),
+    changePercent: parseFloat(t.priceChangePercent),
+    volume24h: parseFloat(t.quoteVolume),
+    high24h: parseFloat(t.highPrice),
+    low24h: parseFloat(t.lowPrice),
+  }));
+}
+
 // ─── Live ticker (24h rolling stats, ~1/sec) ──────────────────────────────────
 
 export interface LiveTicker {

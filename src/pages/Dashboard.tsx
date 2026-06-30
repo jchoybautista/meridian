@@ -11,10 +11,10 @@ import { HeroPromo } from "../components/dashboard/HeroPromo";
 import { PricesPanel } from "../components/dashboard/PricesPanel";
 import { TopMovers } from "../components/dashboard/TopMovers";
 import { LatestTransactions } from "../components/dashboard/LatestTransactions";
-import { LatestBlocks } from "../components/dashboard/LatestBlocks";
 import { FeaturedCoin } from "../components/dashboard/FeaturedCoin";
 import { FearGreedGauge } from "../components/dashboard/FearGreedGauge";
 import { TrendingCoins } from "../components/dashboard/TrendingCoins";
+import { BinanceMarketStats } from "../components/dashboard/BinanceMarketStats";
 import { SectorPerformance } from "../components/dashboard/SectorPerformance";
 import { ExploreAssets } from "../components/dashboard/ExploreAssets";
 import { Heatmap } from "../components/charts/Heatmap";
@@ -86,8 +86,7 @@ type StocksState = ReturnType<typeof useAsync<Awaited<ReturnType<typeof getStock
 function CryptoBoard({ markets, global }: { markets: MarketsState; global: GlobalState }) {
   const snapshot = markets.data ?? [];
   const { assets, isLive } = useLiveAssets(snapshot);
-  const btc = assets.find((a) => a.id === "bitcoin");
-  const eth = assets.find((a) => a.id === "ethereum");
+  const topAssets = [...assets].sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0)).slice(0, 2);
   const dominance = global.data?.dominance ?? computeDominance(assets);
   const totalMarketCap = global.data?.totalMarketCap;
   const marketCapChange24h = global.data?.marketCapChange24h;
@@ -141,20 +140,22 @@ function CryptoBoard({ markets, global }: { markets: MarketsState; global: Globa
       </div>
 
       <div className={`mb-4 ${ROW}`}>
-        <Panel title="Charts" subtitle="Market Dominance">
+        <Panel title="Market Dominance" subtitle="Crypto Market Cap" className="lg:col-span-2">
           {dominance.length > 0 ? (
             <DominancePie data={dominance} />
           ) : (
             <div className="skeleton h-full min-h-[180px] rounded-lg" aria-hidden="true" />
           )}
         </Panel>
-        {eth ? <FeaturedCoin asset={eth} /> : <PanelSkeleton title="Ethereum" />}
-        {btc ? <FeaturedCoin asset={btc} /> : <PanelSkeleton title="Bitcoin" />}
-        <LatestBlocks />
+        {topAssets[0] ? <FeaturedCoin asset={topAssets[0]} label="Top by Market Cap" /> : <PanelSkeleton title="Top Crypto" />}
+        {topAssets[1] ? <FeaturedCoin asset={topAssets[1]} label="2nd by Market Cap" /> : <PanelSkeleton title="Top Crypto" />}
       </div>
 
       <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <FearGreedGauge />
+        <div className="grid gap-4" style={{ gridTemplateRows: "auto 1fr" }}>
+          <FearGreedGauge />
+          <BinanceMarketStats className="h-full" />
+        </div>
         <div className="lg:col-span-3">
           <TrendingCoins />
         </div>
