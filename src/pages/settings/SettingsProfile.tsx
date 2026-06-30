@@ -1,6 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Camera, ImageIcon, Loader2 } from 'lucide-react';
+import { Camera, ImageIcon, Loader2, X, Circle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
 import { SettingsBackHeader } from '../../components/settings/SettingsBackHeader';
@@ -9,6 +9,144 @@ import { supabase, isSupabaseConfigured } from '../../lib/supabase';
 function getInitials(name: string, email: string): string {
   return (name.trim() || email).charAt(0).toUpperCase();
 }
+
+// ─── Camera modal ──────────────────────────────────────────────────────────────
+
+function CameraModal({
+  onCapture,
+  onClose,
+}: {
+  onCapture: (blob: Blob) => void;
+  onClose: () => void;
+}) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const [ready, setReady] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+
+    navigator.mediaDevices
+      .getUserMedia({ video: { facingMode: 'user' }, audio: false })
+      .then((stream) => {
+        if (!mounted) { stream.getTracks().forEach((t) => t.stop()); return; }
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          videoRef.current.onloadedmetadata = () => { if (mounted) setReady(true); };
+        }
+      })
+      .catch(() => {
+        if (mounted) setError('Camera access denied or unavailable on this device.');
+      });
+
+    return () => {
+      mounted = false;
+      streamRef.current?.getTracks().forEach((t) => t.stop());
+    };
+  }, []);
+
+  const capture = () => {
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    if (!video || !canvas || !ready) return;
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d')?.drawImage(video, 0, 0);
+    canvas.toBlob(
+      (blob) => {
+        if (blob) {
+          streamRef.current?.getTracks().forEach((t) => t.stop());
+          onCapture(blob);
+        }
+      },
+      'image/jpeg',
+      0.88,
+    );
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-base/90 backdrop-blur-sm"
+      tabIndex={-1}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
+    >
+      <div
+        className="card mx-4 w-full max-w-sm overflow-hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Take a photo"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-4">
+          <h3 className="font-bold">Take Photo</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close camera"
+            className="flex h-8 w-8 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-elevated hover:text-ink"
+          >
+            <X className="h-4 w-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        {error ? (
+          <div className="p-5 pt-0">
+            <p className="text-sm text-down" role="alert">{error}</p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-4 w-full rounded-lg border border-line py-2 text-sm font-semibold"
+            >
+              Close
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Video preview */}
+            <div className="relative bg-black">
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                className="w-full"
+                aria-label="Camera preview"
+              />
+              {!ready && (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Loader2 className="h-8 w-8 animate-spin text-white" aria-label="Starting camera" />
+                </div>
+              )}
+            </div>
+
+            {/* Capture button */}
+            <div className="flex justify-center p-5">
+              <button
+                type="button"
+                onClick={capture}
+                disabled={!ready}
+                aria-label="Capture photo"
+                className="flex h-16 w-16 items-center justify-center rounded-full border-4 border-white bg-white/10 transition-colors hover:bg-white/20 disabled:opacity-40"
+              >
+                <Circle className="h-10 w-10 fill-white text-white" aria-hidden="true" />
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Hidden canvas for frame capture */}
+        <canvas ref={canvasRef} className="hidden" aria-hidden="true" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Deactivate modal ──────────────────────────────────────────────────────────
 
 function DeactivateModal({
   onClose,
@@ -56,6 +194,8 @@ function DeactivateModal({
   );
 }
 
+// ─── Profile page ──────────────────────────────────────────────────────────────
+
 export function SettingsProfile() {
   const { user, signOut } = useAuth();
   const { displayName, setDisplayName } = useSettings();
@@ -66,13 +206,12 @@ export function SettingsProfile() {
   const [nameInput, setNameInput] = useState(displayName);
   const [saved, setSaved] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(storedAvatar);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-
   const initials = getInitials(nameInput, user?.email ?? '');
 
   const handleSave = () => {
@@ -86,21 +225,19 @@ export function SettingsProfile() {
     navigate('/');
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    // Reset the input so the same file can be selected again if needed
-    e.target.value = '';
+  const uploadFile = async (file: File | Blob) => {
+    if (!user) return;
     setUploadError(null);
     setUploading(true);
 
     try {
+      const fileObj = file instanceof File ? file : new File([file], 'avatar.jpg', { type: 'image/jpeg' });
+
       if (isSupabaseConfigured && supabase) {
         const path = `${user.id}/avatar`;
         const { error } = await supabase.storage
           .from('avatars')
-          .upload(path, file, { upsert: true, contentType: file.type });
+          .upload(path, fileObj, { upsert: true, contentType: fileObj.type });
 
         if (error) throw error;
 
@@ -108,25 +245,38 @@ export function SettingsProfile() {
           .from('avatars')
           .getPublicUrl(path);
 
-        // Bust the CDN cache by appending a timestamp
         const bustedUrl = `${publicUrl}?t=${Date.now()}`;
         localStorage.setItem(`meridian_avatar_${user.id}`, bustedUrl);
         setAvatarUrl(bustedUrl);
       } else {
         // Supabase not configured — store as data URL in localStorage
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const dataUrl = ev.target?.result as string;
-          localStorage.setItem(`meridian_avatar_${user.id}`, dataUrl);
-          setAvatarUrl(dataUrl);
-        };
-        reader.readAsDataURL(file);
+        await new Promise<void>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const dataUrl = ev.target?.result as string;
+            localStorage.setItem(`meridian_avatar_${user.id}`, dataUrl);
+            setAvatarUrl(dataUrl);
+            resolve();
+          };
+          reader.readAsDataURL(fileObj);
+        });
       }
     } catch {
       setUploadError('Upload failed. Please try again.');
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (file) void uploadFile(file);
+  };
+
+  const handleCameraCapture = (blob: Blob) => {
+    setShowCamera(false);
+    void uploadFile(blob);
   };
 
   return (
@@ -160,12 +310,12 @@ export function SettingsProfile() {
             )}
           </div>
 
-          {/* Upload buttons */}
+          {/* Photo buttons */}
           <div className="flex gap-2">
             <button
               type="button"
               disabled={uploading}
-              onClick={() => cameraInputRef.current?.click()}
+              onClick={() => setShowCamera(true)}
               className="flex min-h-[36px] items-center gap-1.5 rounded-lg border border-line px-3 py-1.5 text-xs font-semibold text-ink-muted transition-colors hover:border-brand hover:text-ink disabled:opacity-50"
             >
               <Camera className="h-3.5 w-3.5" aria-hidden="true" />
@@ -186,17 +336,7 @@ export function SettingsProfile() {
             <p role="alert" className="text-xs text-down">{uploadError}</p>
           )}
 
-          {/* Hidden file inputs */}
-          <input
-            ref={cameraInputRef}
-            type="file"
-            accept="image/*"
-            capture="user"
-            className="sr-only"
-            aria-hidden="true"
-            tabIndex={-1}
-            onChange={handleFileChange}
-          />
+          {/* Hidden gallery file input */}
           <input
             ref={galleryInputRef}
             type="file"
@@ -204,7 +344,7 @@ export function SettingsProfile() {
             className="sr-only"
             aria-hidden="true"
             tabIndex={-1}
-            onChange={handleFileChange}
+            onChange={handleGalleryChange}
           />
         </div>
 
@@ -268,6 +408,13 @@ export function SettingsProfile() {
           Deactivate Account
         </button>
       </div>
+
+      {showCamera && (
+        <CameraModal
+          onCapture={handleCameraCapture}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
 
       {showModal && (
         <DeactivateModal
