@@ -25,7 +25,7 @@ function DepthRow({
 }) {
   const pct = maxQty > 0 ? (level.quantity / maxQty) * 100 : 0;
   return (
-    <li className="relative flex items-center justify-between px-2 py-[3px] text-xs tabular-nums">
+    <li className="relative flex items-center justify-between px-4 py-[3px] text-xs tabular-nums">
       <div
         className={`absolute inset-y-0 right-0 ${side === "ask" ? "bg-down/20" : "bg-up/20"}`}
         style={{ width: `${pct}%` }}
@@ -81,7 +81,7 @@ export function OrderBook({ assetType, symbol, currentPrice }: Props) {
       : null;
 
   const skeletonRow = (i: number) => (
-    <li key={i} className="h-[22px] px-2 py-[3px]">
+    <li key={i} className="h-[22px] px-4 py-[3px]">
       <div className="h-3 w-full skeleton rounded" />
     </li>
   );
@@ -89,7 +89,7 @@ export function OrderBook({ assetType, symbol, currentPrice }: Props) {
   return (
     <div className="flex h-full flex-col text-[11px]">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-line px-2 py-2">
+      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Order Book
         </h3>
@@ -101,7 +101,7 @@ export function OrderBook({ assetType, symbol, currentPrice }: Props) {
       </div>
 
       {/* Column labels */}
-      <div className="flex items-center justify-between px-2 py-1 text-[10px] text-ink-muted">
+      <div className="flex items-center justify-between px-4 py-1.5 text-[10px] text-ink-muted">
         <span>Price (USD)</span>
         <span>Qty</span>
       </div>
@@ -116,7 +116,7 @@ export function OrderBook({ assetType, symbol, currentPrice }: Props) {
       </ul>
 
       {/* Mid-price / spread row */}
-      <div className="border-y border-line bg-elevated px-2 py-1.5 text-center text-xs font-bold tabular-nums">
+      <div className="border-y border-white/10 bg-elevated px-4 py-1.5 text-center text-xs font-bold tabular-nums">
         {book ? (
           <>
             <span className="text-ink">{formatPrice(currentPrice)}</span>

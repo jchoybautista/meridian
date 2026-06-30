@@ -39,8 +39,12 @@ export function Heatmap({ assets }: Props) {
         return (
           <button
             key={asset.id}
-            className={`${span} flex flex-col items-center justify-center rounded-lg transition-colors duration-700 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
-            style={{ background: cellColor(asset.change24h) }}
+            className={`${span} animate-fade-in flex flex-col items-center justify-center rounded-lg transition-colors duration-700 hover:brightness-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand`}
+            style={{
+              background: cellColor(asset.change24h),
+              animationDelay: `${i * 60}ms`,
+              animationFillMode: "backwards",
+            }}
             onClick={() => navigate(`/asset/crypto/${asset.id}`)}
           >
             <span className="text-sm font-bold text-white">{asset.symbol}</span>

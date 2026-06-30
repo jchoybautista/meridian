@@ -41,7 +41,7 @@ export function TradingPanel({ asset, currentPrice }: Props) {
 
           {/* Open orders for this asset */}
           {pendingForAsset.length > 0 && (
-            <div className="border-t border-line p-4">
+            <div className="border-t border-white/10 p-5">
               <h4 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-muted">
                 Open Orders
               </h4>
@@ -76,7 +76,7 @@ export function TradingPanel({ asset, currentPrice }: Props) {
           )}
 
           {/* Order Book */}
-          <div className="border-t border-line">
+          <div className="border-t border-white/10">
             <OrderBook
               assetType={asset.type as "crypto" | "stock"}
               symbol={asset.symbol}

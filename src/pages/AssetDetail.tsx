@@ -269,7 +269,7 @@ export function AssetDetail() {
               onClick={() => void toggleWatch()}
               aria-pressed={watched}
               className={`inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-5 py-2 font-semibold transition-colors ${
-                watched ? "border-brand bg-brand/15 text-brand" : "border-line hover:border-brand hover:text-brand"
+                watched ? "border-brand bg-brand/15 text-brand" : "border-white/20 hover:border-brand hover:text-brand"
               }`}
             >
               <Star className={`h-4 w-4 ${watched ? "fill-brand" : ""}`} aria-hidden="true" />
@@ -290,14 +290,14 @@ export function AssetDetail() {
           </div>
 
           {detail.data?.sample && (
-            <p className="mb-4 rounded-lg border border-line bg-card px-3 py-2 text-xs text-ink-muted">
+            <p className="mb-4 rounded-lg bg-elevated px-3 py-2 text-xs text-ink-muted">
               Showing sample data. Add an Alpha Vantage API key for live quotes.
             </p>
           )}
 
           {/* ── Chart card ── */}
           <div className="card mb-6 overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 px-5 py-4">
               <h2 className="text-sm font-semibold">Price Chart</h2>
 
               {isCrypto ? (
@@ -313,7 +313,7 @@ export function AssetDetail() {
               )}
             </div>
 
-            <div className="p-4">
+            <div className="p-5">
               {isCrypto ? (
                 <>
                   {ohlc.loading || !ohlc.data ? (
@@ -463,7 +463,7 @@ export function AssetDetail() {
                   <h2 id="news-heading" className="mb-4 text-sm font-semibold">Company News</h2>
                   <ul className="space-y-3">
                     {stockNews.data.map((item, i) => (
-                      <li key={i} className="border-b border-line pb-3 last:border-0 last:pb-0">
+                      <li key={i} className="border-b border-white/10 pb-3 last:border-0 last:pb-0">
                         <a
                           href={item.url}
                           target="_blank"
@@ -584,7 +584,7 @@ function AboutCrypto({
       {info.categories.length > 0 && (
         <div className="mb-4 flex flex-wrap gap-2">
           {info.categories.map((c) => (
-            <span key={c} className="rounded-full border border-line bg-elevated px-3 py-0.5 text-xs text-ink-muted">
+            <span key={c} className="rounded-full bg-elevated px-3 py-0.5 text-xs text-ink-muted">
               {c}
             </span>
           ))}
@@ -672,17 +672,17 @@ function AboutStock({
 
       <div className="mb-4 flex flex-wrap gap-2">
         {profile.sector && (
-          <span className="rounded-full border border-line bg-elevated px-3 py-0.5 text-xs text-ink-muted">
+          <span className="rounded-full bg-elevated px-3 py-0.5 text-xs text-ink-muted">
             {profile.sector}
           </span>
         )}
         {profile.industry && (
-          <span className="rounded-full border border-line bg-elevated px-3 py-0.5 text-xs text-ink-muted">
+          <span className="rounded-full bg-elevated px-3 py-0.5 text-xs text-ink-muted">
             {profile.industry}
           </span>
         )}
         {profile.country && (
-          <span className="rounded-full border border-line bg-elevated px-3 py-0.5 text-xs text-ink-muted">
+          <span className="rounded-full bg-elevated px-3 py-0.5 text-xs text-ink-muted">
             {profile.country}
           </span>
         )}

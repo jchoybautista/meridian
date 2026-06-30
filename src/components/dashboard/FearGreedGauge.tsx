@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useAsync } from "../../hooks/useAsync";
 import { getFearGreed } from "../../lib/feargreed";
 import { Panel } from "./Panel";
@@ -20,15 +21,19 @@ function GaugeArc({ value }: { value: number }) {
   const r = 78;
   const strokeWidth = 14;
 
+  // Reveal the arc on mount (draw-in effect) rather than on every value change.
+  const [revealed, setRevealed] = useState(false);
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setRevealed(true));
+    return () => cancelAnimationFrame(id);
+  }, []);
+
   // Convert value (0-100) to angle in degrees along the semicircle (0° = left, 180° = right)
   const angleDeg = (value / 100) * 180;
   // Convert to radians relative to the left start (180° in standard coords)
   const angleRad = ((180 + angleDeg) * Math.PI) / 180;
-
-  // Needle tip point
-  const needleLength = r - strokeWidth / 2;
-  const nx = cx + needleLength * Math.cos(angleRad);
-  const ny = cy + needleLength * Math.sin(angleRad);
+  // Arc length of the value sweep, used to animate the stroke drawing in.
+  const sweepLength = r * ((angleDeg * Math.PI) / 180);
 
   // Track arc: full semicircle background
   const trackStart = { x: cx - r, y: cy };
@@ -47,31 +52,29 @@ function GaugeArc({ value }: { value: number }) {
       aria-hidden="true"
       className="w-full max-w-[320px]"
     >
-      {/* Track (background arc) */}
+      {/* Track (background arc) — flat ends so it doesn't bulge into a circle */}
       <path
         d={`M ${trackStart.x} ${trackStart.y} A ${r} ${r} 0 0 1 ${trackEnd.x} ${trackEnd.y}`}
         fill="none"
         stroke="#27272a"
         strokeWidth={strokeWidth}
-        strokeLinecap="round"
+        strokeLinecap="butt"
       />
 
-      {/* Value arc */}
+      {/* Value arc — draws in from the start of the track on mount, flat ends */}
       {value > 0 && (
         <path
           d={`M ${trackStart.x} ${trackStart.y} A ${r} ${r} 0 ${largeArc} 1 ${valueEndX} ${valueEndY}`}
           fill="none"
           stroke={color}
           strokeWidth={strokeWidth}
-          strokeLinecap="round"
+          strokeLinecap="butt"
+          strokeDasharray={sweepLength}
+          strokeDashoffset={revealed ? 0 : sweepLength}
+          style={{ transition: "stroke-dashoffset 1s ease-out" }}
         />
       )}
 
-      {/* Needle dot */}
-      <circle cx={nx} cy={ny} r={5} fill={color} />
-
-      {/* Centre pivot */}
-      <circle cx={cx} cy={cy} r={4} fill="#52525b" />
 
       {/* Numeric value */}
       <text
@@ -83,6 +86,10 @@ function GaugeArc({ value }: { value: number }) {
         fontSize="34"
         fontWeight="800"
         fontFamily="inherit"
+        style={{
+          opacity: revealed ? 1 : 0,
+          transition: "opacity 0.5s ease-out 0.4s",
+        }}
       >
         {value}
       </text>
@@ -91,11 +98,11 @@ function GaugeArc({ value }: { value: number }) {
 }
 
 /** Fear & Greed Index widget — fetches from Alternative.me, caches 1 hour. */
-export function FearGreedGauge() {
+export function FearGreedGauge({ className }: { className?: string }) {
   const { data, loading } = useAsync(getFearGreed, []);
 
   return (
-    <Panel title="Market Sentiment" subtitle="Fear & Greed Index">
+    <Panel title="Market Sentiment" subtitle="Fear & Greed Index" className={className}>
       {loading ? (
         <div className="flex h-full flex-col items-center justify-center gap-3">
           <div className="skeleton h-20 w-full max-w-[200px] rounded-full" aria-hidden="true" />

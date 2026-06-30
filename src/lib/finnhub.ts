@@ -413,8 +413,6 @@ export interface SectorData {
 }
 
 export async function getSectorPerformance(): Promise<SectorData[]> {
-  if (!KEY) return [];
-
   const { assets } = await getFinnhubStockList();
   const bySymbol = new Map(assets.map((a) => [a.symbol, a]));
   const sectorChanges = new Map<string, number[]>();

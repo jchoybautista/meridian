@@ -320,7 +320,7 @@ export async function getTrendingCoins(): Promise<TrendingCoin[]> {
         };
       }>;
     }>(url);
-    return data.coins.slice(0, 7).map((c) => ({
+    return data.coins.slice(0, 10).map((c) => ({
       id: c.item.id,
       name: c.item.name,
       symbol: c.item.symbol.toUpperCase(),
