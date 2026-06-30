@@ -30,6 +30,17 @@ export function Settings() {
   const joinDate = user?.created_at ? formatJoinDate(user.created_at) : '';
   const avatarUrl = user ? localStorage.getItem(`meridian_avatar_${user.id}`) : null;
 
+  const securitySection = (
+    <>
+      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Security
+      </p>
+      <div className="card divide-y divide-line mb-6">
+        <SettingsRow icon={Shield} label="Security" to="/settings/security" />
+      </div>
+    </>
+  );
+
   const preferencesSection = (
     <>
       <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -93,6 +104,7 @@ export function Settings() {
           </div>
         </div>
 
+        {securitySection}
         {preferencesSection}
         {privacySection}
         {legalSection}
@@ -137,6 +149,7 @@ export function Settings() {
         <SettingsRow label="Deactivate Account" to="/settings/profile" danger />
       </div>
 
+      {securitySection}
       {preferencesSection}
       {privacySection}
       {legalSection}

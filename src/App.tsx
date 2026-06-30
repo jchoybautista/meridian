@@ -23,6 +23,7 @@ import { SettingsAbout } from "./pages/settings/SettingsAbout";
 import { SettingsTerms } from "./pages/settings/SettingsTerms";
 import { SettingsPrivacy } from "./pages/settings/SettingsPrivacy";
 import { SettingsPrivacySettings } from "./pages/settings/SettingsPrivacySettings";
+import { SettingsSecurity } from "./pages/settings/SettingsSecurity";
 
 export default function App() {
   return (
@@ -142,6 +143,7 @@ export default function App() {
                 </AuthGuard>
               }
             />
+            <Route path="/settings/security" element={<SettingsSecurity />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
