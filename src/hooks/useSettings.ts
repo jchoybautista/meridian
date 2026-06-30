@@ -44,7 +44,7 @@ export function useSettings() {
   const [marketing, setMarketingState] = useState(
     () => readBool('meridian_marketing', false),
   );
-  const [displayName, setDisplayNameState] = useState(
+  const [displayName, setDisplayNameState] = useState<string>(
     () => readString('meridian_display_name', ''),
   );
 

@@ -203,7 +203,7 @@ export function SettingsProfile() {
 
   const storedAvatar = user ? localStorage.getItem(`meridian_avatar_${user.id}`) : null;
 
-  const [nameInput, setNameInput] = useState(displayName);
+  const [nameInput, setNameInput] = useState<string>(displayName);
   const [saved, setSaved] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
