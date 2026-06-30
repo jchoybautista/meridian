@@ -24,6 +24,14 @@ import { SettingsTerms } from "./pages/settings/SettingsTerms";
 import { SettingsPrivacy } from "./pages/settings/SettingsPrivacy";
 import { SettingsPrivacySettings } from "./pages/settings/SettingsPrivacySettings";
 import { SettingsSecurity } from "./pages/settings/SettingsSecurity";
+import { SettingsSecurityChangePassword } from "./pages/settings/SettingsSecurityChangePassword";
+import { SettingsSecurity2FA } from "./pages/settings/SettingsSecurity2FA";
+import { SettingsSecurityPasskeys } from "./pages/settings/SettingsSecurityPasskeys";
+import { SettingsSecuritySessions } from "./pages/settings/SettingsSecuritySessions";
+import { SettingsSecurityTrustedDevices } from "./pages/settings/SettingsSecurityTrustedDevices";
+import { SettingsSecurityLoginActivity } from "./pages/settings/SettingsSecurityLoginActivity";
+import { SettingsSecurityBackupCodes } from "./pages/settings/SettingsSecurityBackupCodes";
+import { SettingsSecurityAccountRecovery } from "./pages/settings/SettingsSecurityAccountRecovery";
 
 export default function App() {
   return (
@@ -144,6 +152,14 @@ export default function App() {
               }
             />
             <Route path="/settings/security" element={<SettingsSecurity />} />
+            <Route path="/settings/security/change-password" element={<SettingsSecurityChangePassword />} />
+            <Route path="/settings/security/2fa" element={<SettingsSecurity2FA />} />
+            <Route path="/settings/security/passkeys" element={<SettingsSecurityPasskeys />} />
+            <Route path="/settings/security/sessions" element={<SettingsSecuritySessions />} />
+            <Route path="/settings/security/trusted-devices" element={<SettingsSecurityTrustedDevices />} />
+            <Route path="/settings/security/login-activity" element={<SettingsSecurityLoginActivity />} />
+            <Route path="/settings/security/backup-codes" element={<SettingsSecurityBackupCodes />} />
+            <Route path="/settings/security/account-recovery" element={<SettingsSecurityAccountRecovery />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
