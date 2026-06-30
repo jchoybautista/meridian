@@ -5,12 +5,12 @@ import { ChangeBadge } from "../ui/ChangeBadge";
 import { Panel } from "./Panel";
 
 /** Trending Coins widget — top 7 from CoinGecko /search/trending, cached 10 min. */
-export function TrendingCoins() {
+export function TrendingCoins({ className }: { className?: string }) {
   const { data, loading } = useAsync(getTrendingCoins, []);
   const navigate = useNavigate();
 
   return (
-    <Panel title="🔥 Trending" subtitle="Top coins right now">
+    <Panel title="🔥 Trending" subtitle="Top coins right now" className={className}>
       {loading ? (
         <div className="space-y-2" aria-hidden="true">
           {Array.from({ length: 7 }).map((_, i) => (
