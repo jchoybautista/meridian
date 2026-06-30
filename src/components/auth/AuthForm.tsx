@@ -79,9 +79,20 @@ export function AuthForm({ mode }: Props) {
             />
           </div>
           <div>
-            <label htmlFor="password" className="mb-1 block text-sm font-medium">
-              Password
-            </label>
+            <div className="mb-1 flex items-center justify-between">
+              <label htmlFor="password" className="text-sm font-medium">
+                Password
+              </label>
+              {isLogin && (
+                <Link
+                  to="/forgot-password"
+                  className="text-xs text-brand hover:underline"
+                  tabIndex={0}
+                >
+                  Forgot password?
+                </Link>
+              )}
+            </div>
             <input
               id="password"
               type="password"
@@ -93,6 +104,16 @@ export function AuthForm({ mode }: Props) {
               className="w-full rounded-lg border border-line bg-base px-3 py-2.5 outline-none focus:border-brand"
             />
           </div>
+
+          {isLogin && (
+            <label className="flex cursor-pointer items-center gap-2 select-none">
+              <input
+                type="checkbox"
+                className="accent-brand h-4 w-4 rounded"
+              />
+              <span className="text-sm text-ink-muted">Remember me</span>
+            </label>
+          )}
 
           {error && (
             <p role="alert" className="text-sm text-down">

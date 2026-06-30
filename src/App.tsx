@@ -12,6 +12,7 @@ import { Wallet } from "./pages/Wallet";
 import { Transactions } from "./pages/Transactions";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
+import { ForgotPassword } from "./pages/ForgotPassword";
 import { NotFound } from "./pages/NotFound";
 import { Settings } from "./pages/settings/Settings";
 import { SettingsProfile } from "./pages/settings/SettingsProfile";
@@ -141,6 +142,7 @@ export default function App() {
                 </AuthGuard>
               }
             />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="*" element={<NotFound />} />
