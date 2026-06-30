@@ -38,7 +38,7 @@ export function ForgotPassword() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <form onSubmit={onSubmit} className="space-y-4">
             <div>
               <label htmlFor="reset-email" className="mb-1 block text-sm font-medium">
                 Email

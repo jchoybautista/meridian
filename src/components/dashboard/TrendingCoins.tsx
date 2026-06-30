@@ -33,7 +33,6 @@ export function TrendingCoins() {
                   width={30}
                   height={30}
                   className="shrink-0 rounded-full bg-elevated object-cover"
-                  style={{ width: 30, height: 30 }}
                   aria-hidden="true"
                 />
                 <span className="min-w-0 flex-1">

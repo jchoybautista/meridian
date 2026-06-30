@@ -87,7 +87,6 @@ export function AuthForm({ mode }: Props) {
                 <Link
                   to="/forgot-password"
                   className="text-xs text-brand hover:underline"
-                  tabIndex={0}
                 >
                   Forgot password?
                 </Link>

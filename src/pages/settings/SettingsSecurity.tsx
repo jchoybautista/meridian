@@ -80,11 +80,13 @@ export function SettingsSecurity() {
           checked={securityAlerts}
           onChange={setSecurityAlerts}
         />
-        <SettingsRow
-          icon={Timer}
-          label="Auto-lock After Inactivity"
-          value="15 min"
-        />
+        <div className="flex min-h-[48px] items-center justify-between gap-3 px-5 py-3">
+          <div className="flex items-center gap-3">
+            <Timer className="h-5 w-5 shrink-0 text-ink-muted" aria-hidden="true" />
+            <span className="text-sm font-medium text-ink">Auto-lock After Inactivity</span>
+          </div>
+          <span className="text-sm text-ink-muted">15 min</span>
+        </div>
       </div>
 
       {/* Recovery */}
@@ -98,11 +100,13 @@ export function SettingsSecurity() {
           value="10 remaining"
           to="/settings/security/backup-codes"
         />
-        <SettingsRow
-          icon={Mail}
-          label="Recovery Email"
-          value="j***@gmail.com"
-        />
+        <div className="flex min-h-[48px] items-center justify-between gap-3 px-5 py-3">
+          <div className="flex items-center gap-3">
+            <Mail className="h-5 w-5 shrink-0 text-ink-muted" aria-hidden="true" />
+            <span className="text-sm font-medium text-ink">Recovery Email</span>
+          </div>
+          <span className="text-sm text-ink-muted">j***@gmail.com</span>
+        </div>
         <SettingsRow
           icon={LifeBuoy}
           label="Account Recovery"

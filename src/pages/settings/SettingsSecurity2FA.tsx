@@ -84,17 +84,17 @@ export function SettingsSecurity2FA() {
               {codesRevealed ? 'Hide' : 'Reveal'}
             </button>
           </div>
-          <div className="grid grid-cols-2 gap-1.5">
+          <ul role="list" className="grid grid-cols-2 gap-1.5 list-none p-0 m-0">
             {backupCodes.map((code, i) => (
-              <span
+              <li
                 key={i}
                 aria-label={codesRevealed ? code : 'Hidden backup code'}
                 className="rounded bg-elevated px-2 py-1 font-mono text-xs tabular-nums text-ink"
               >
                 {codesRevealed ? code : '•••••••••'}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
           <p className="mt-2 text-[10px] text-ink-muted">
             Each code can only be used once. Store them somewhere safe.
           </p>
