@@ -101,3 +101,29 @@ create policy "Users manage their own orders"
   on public.paper_orders for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Storage: avatar uploads ---------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('avatars', 'avatars', true)
+on conflict (id) do nothing;
+
+drop policy if exists "Users upload their own avatar" on storage.objects;
+create policy "Users upload their own avatar"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "Users update their own avatar" on storage.objects;
+create policy "Users update their own avatar"
+  on storage.objects for update
+  using (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "Anyone can view avatars" on storage.objects;
+create policy "Anyone can view avatars"
+  on storage.objects for select
+  using (bucket_id = 'avatars');

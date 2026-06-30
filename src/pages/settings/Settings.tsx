@@ -28,6 +28,7 @@ export function Settings() {
 
   const initials = user ? getInitials(displayName, user.email ?? '') : '';
   const joinDate = user?.created_at ? formatJoinDate(user.created_at) : '';
+  const avatarUrl = user ? localStorage.getItem(`meridian_avatar_${user.id}`) : null;
 
   const preferencesSection = (
     <>
@@ -50,7 +51,7 @@ export function Settings() {
   const privacySection = (
     <>
       <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-        Privacy
+        Privacy Settings
       </p>
       <div className="card divide-y divide-line mb-6">
         <SettingsRow icon={Shield} label="Privacy Settings" to="/settings/privacy-settings" />
@@ -76,9 +77,7 @@ export function Settings() {
       <div className="animate-fade-in mx-auto max-w-lg">
         <PageHeader title="Settings" />
 
-        {preferencesSection}
-        {privacySection}
-
+        {/* Account — sign-in prompt */}
         <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
           Account
         </p>
@@ -94,6 +93,8 @@ export function Settings() {
           </div>
         </div>
 
+        {preferencesSection}
+        {privacySection}
         {legalSection}
       </div>
     );
@@ -103,15 +104,26 @@ export function Settings() {
     <div className="animate-fade-in mx-auto max-w-lg">
       <PageHeader title="Settings" />
 
-      {/* Profile card */}
-      <div className="card p-5 mb-6">
+      {/* Account — profile card */}
+      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Account
+      </p>
+      <div className="card p-5 mb-2">
         <div className="flex items-center gap-4">
-          <div
-            className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-xl font-extrabold text-white"
-            aria-hidden="true"
-          >
-            {initials}
-          </div>
+          {avatarUrl ? (
+            <img
+              src={avatarUrl}
+              alt="Your profile photo"
+              className="h-14 w-14 shrink-0 rounded-full object-cover"
+            />
+          ) : (
+            <div
+              className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-brand text-xl font-extrabold text-white"
+              aria-hidden="true"
+            >
+              {initials}
+            </div>
+          )}
           <div className="min-w-0">
             <p className="truncate font-semibold">{displayName || user.email}</p>
             {joinDate && (
@@ -120,19 +132,13 @@ export function Settings() {
           </div>
         </div>
       </div>
-
-      {preferencesSection}
-      {privacySection}
-
-      {/* Account */}
-      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-        Account
-      </p>
       <div className="card divide-y divide-line mb-6">
         <SettingsRow icon={UserPen} label="Edit Profile" to="/settings/profile" />
         <SettingsRow label="Deactivate Account" to="/settings/profile" danger />
       </div>
 
+      {preferencesSection}
+      {privacySection}
       {legalSection}
 
       {/* Sign out */}
