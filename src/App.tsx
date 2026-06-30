@@ -13,6 +13,15 @@ import { Transactions } from "./pages/Transactions";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { NotFound } from "./pages/NotFound";
+import { Settings } from "./pages/settings/Settings";
+import { SettingsProfile } from "./pages/settings/SettingsProfile";
+import { SettingsNotifications } from "./pages/settings/SettingsNotifications";
+import { SettingsCurrency } from "./pages/settings/SettingsCurrency";
+import { SettingsLanguage } from "./pages/settings/SettingsLanguage";
+import { SettingsAbout } from "./pages/settings/SettingsAbout";
+import { SettingsTerms } from "./pages/settings/SettingsTerms";
+import { SettingsPrivacy } from "./pages/settings/SettingsPrivacy";
+import { SettingsPrivacySettings } from "./pages/settings/SettingsPrivacySettings";
 
 export default function App() {
   return (
@@ -61,6 +70,78 @@ export default function App() {
               element={
                 <AuthGuard>
                   <Transactions />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <AuthGuard>
+                  <Settings />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/profile"
+              element={
+                <AuthGuard>
+                  <SettingsProfile />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/notifications"
+              element={
+                <AuthGuard>
+                  <SettingsNotifications />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/currency"
+              element={
+                <AuthGuard>
+                  <SettingsCurrency />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/language"
+              element={
+                <AuthGuard>
+                  <SettingsLanguage />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/about"
+              element={
+                <AuthGuard>
+                  <SettingsAbout />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/terms"
+              element={
+                <AuthGuard>
+                  <SettingsTerms />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/privacy"
+              element={
+                <AuthGuard>
+                  <SettingsPrivacy />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/settings/privacy-settings"
+              element={
+                <AuthGuard>
+                  <SettingsPrivacySettings />
                 </AuthGuard>
               }
             />
