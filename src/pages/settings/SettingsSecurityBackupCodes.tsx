@@ -19,17 +19,17 @@ export function SettingsSecurityBackupCodes() {
         </p>
 
         <div className="mb-4 rounded-lg border border-line bg-elevated p-4">
-          <div className="grid grid-cols-2 gap-2">
+          <ul role="list" className="grid grid-cols-2 gap-1.5 list-none p-0 m-0">
             {BACKUP_CODES.map((code, i) => (
-              <span
+              <li
                 key={i}
                 aria-label={revealed ? code : 'Hidden backup code'}
                 className="rounded bg-base px-2 py-1.5 text-center font-mono text-sm tabular-nums"
               >
                 {revealed ? code : '•••••••••'}
-              </span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
 
         <div className="flex flex-col gap-2">
