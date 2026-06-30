@@ -9,7 +9,7 @@ export function SettingsBackHeader({ title }: { title: string }) {
         type="button"
         onClick={() => navigate(-1)}
         aria-label="Back to Settings"
-        className="rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-elevated hover:text-ink"
+        className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-1.5 text-ink-muted transition-colors hover:bg-elevated hover:text-ink"
       >
         <ArrowLeft className="h-5 w-5" aria-hidden="true" />
       </button>

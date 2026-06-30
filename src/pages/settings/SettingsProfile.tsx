@@ -18,11 +18,15 @@ function DeactivateModal({
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="deactivate-title"
+      tabIndex={-1}
+      onKeyDown={(e) => { if (e.key === 'Escape') onClose(); }}
     >
-      <div className="card mx-4 w-full max-w-sm p-5">
+      <div
+        className="card mx-4 w-full max-w-sm p-5"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="deactivate-title"
+      >
         <h3 id="deactivate-title" className="mb-2 text-base font-bold">
           Deactivate Account?
         </h3>
@@ -33,14 +37,14 @@ function DeactivateModal({
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-lg border border-line py-2 text-sm font-semibold transition-colors hover:border-brand"
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg border border-line py-2 text-sm font-semibold transition-colors hover:border-brand"
           >
             Cancel
           </button>
           <button
             type="button"
             onClick={onConfirm}
-            className="flex-1 rounded-lg bg-down py-2 text-sm font-bold text-white transition-colors hover:bg-down/80"
+            className="flex min-h-[44px] flex-1 items-center justify-center rounded-lg bg-down py-2 text-sm font-bold text-white transition-colors hover:bg-down/80"
           >
             Yes, deactivate
           </button>
@@ -123,7 +127,7 @@ export function SettingsProfile() {
         <button
           type="button"
           onClick={handleSave}
-          className="mt-4 w-full rounded-lg bg-brand py-2 text-sm font-bold text-white transition-colors hover:bg-brand/80"
+          className="mt-4 flex min-h-[44px] w-full items-center justify-center rounded-lg bg-brand py-2 text-sm font-bold text-white transition-colors hover:bg-brand/80"
         >
           {saved ? '✓ Saved' : 'Save'}
         </button>
@@ -143,7 +147,7 @@ export function SettingsProfile() {
         <button
           type="button"
           onClick={() => setShowModal(true)}
-          className="rounded-lg border border-down/50 px-4 py-2 text-sm font-semibold text-down transition-colors hover:bg-down/10"
+          className="flex min-h-[44px] items-center justify-center rounded-lg border border-down/50 px-4 py-2 text-sm font-semibold text-down transition-colors hover:bg-down/10"
         >
           Deactivate Account
         </button>
