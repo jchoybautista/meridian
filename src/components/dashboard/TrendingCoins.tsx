@@ -30,7 +30,10 @@ export function TrendingCoins() {
                 <img
                   src={coin.thumb}
                   alt=""
-                  className="h-5 w-5 shrink-0 rounded-full"
+                  width={30}
+                  height={30}
+                  className="shrink-0 rounded-full bg-elevated object-cover"
+                  style={{ width: 30, height: 30 }}
                   aria-hidden="true"
                 />
                 <span className="min-w-0 flex-1">
