@@ -4,10 +4,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        base: "#0A0E1A",
+        base: "#070A14",
         card: "#111827",
-        elevated: "#1F2937",
-        line: "#1F2937",
+        elevated: "#252F40",
+        line: "#2A3650",
         brand: {
           DEFAULT: "#6366F1",
           hover: "#4F46E5",
@@ -36,6 +36,10 @@ export default {
         marquee: {
           "0%": { transform: "translateX(0%)" },
           "100%": { transform: "translateX(-50%)" },
+        },
+        drift: {
+          "0%": { backgroundPosition: "0% 0%, 100% 0%, 0% 100%" },
+          "100%": { backgroundPosition: "8% 6%, 92% 10%, 4% 96%" },
         },
       },
       animation: {

@@ -1,5 +1,6 @@
 -- Meridian — Supabase schema
 -- Run this in your Supabase project: SQL Editor → New query → paste → Run.
+-- Safe to re-run: uses IF NOT EXISTS for tables and drops policies before recreating.
 
 -- Watchlist -----------------------------------------------------------------
 create table if not exists public.watchlist (
@@ -14,6 +15,10 @@ create table if not exists public.watchlist (
 
 alter table public.watchlist enable row level security;
 
+drop policy if exists "Users can view their own watchlist" on public.watchlist;
+drop policy if exists "Users can insert into their own watchlist" on public.watchlist;
+drop policy if exists "Users can delete from their own watchlist" on public.watchlist;
+
 create policy "Users can view their own watchlist"
   on public.watchlist for select using (auth.uid() = user_id);
 create policy "Users can insert into their own watchlist"
@@ -24,7 +29,7 @@ create policy "Users can delete from their own watchlist"
 -- Drop old placeholder if it was run previously
 drop table if exists public.portfolio_holdings;
 
--- Portfolio transactions (buy/sell log — holdings and P&L are derived client-side) ----
+-- Portfolio transactions -----------------------------------------------------
 create table if not exists public.portfolio_transactions (
   id               uuid primary key default gen_random_uuid(),
   user_id          uuid references auth.users not null,
@@ -42,6 +47,8 @@ create table if not exists public.portfolio_transactions (
 
 alter table public.portfolio_transactions enable row level security;
 
+drop policy if exists "Users manage their own transactions" on public.portfolio_transactions;
+
 create policy "Users manage their own transactions"
   on public.portfolio_transactions for all
   using (auth.uid() = user_id)
@@ -56,6 +63,8 @@ create table if not exists public.paper_wallet (
 );
 
 alter table public.paper_wallet enable row level security;
+
+drop policy if exists "Users manage their own wallet" on public.paper_wallet;
 
 create policy "Users manage their own wallet"
   on public.paper_wallet for all
@@ -85,6 +94,8 @@ create table if not exists public.paper_orders (
 );
 
 alter table public.paper_orders enable row level security;
+
+drop policy if exists "Users manage their own orders" on public.paper_orders;
 
 create policy "Users manage their own orders"
   on public.paper_orders for all

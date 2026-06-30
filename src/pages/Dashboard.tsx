@@ -60,7 +60,7 @@ function MarketTabs({ tab, onChange }: { tab: Tab; onChange: (t: Tab) => void })
     <div
       role="tablist"
       aria-label="Market type"
-      className="inline-flex rounded-lg border border-line bg-card p-1"
+      className="glass-chrome inline-flex rounded-lg border border-line p-1"
     >
       {(["crypto", "stocks"] as const).map((t) => (
         <button

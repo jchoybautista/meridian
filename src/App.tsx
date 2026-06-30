@@ -9,6 +9,7 @@ import { AssetDetail } from "./pages/AssetDetail";
 import { Watchlist } from "./pages/Watchlist";
 import { Portfolio } from "./pages/Portfolio";
 import { Wallet } from "./pages/Wallet";
+import { Transactions } from "./pages/Transactions";
 import { Login } from "./pages/Login";
 import { Register } from "./pages/Register";
 import { NotFound } from "./pages/NotFound";
@@ -16,6 +17,7 @@ import { NotFound } from "./pages/NotFound";
 export default function App() {
   return (
     <div className="flex min-h-screen">
+      <div className="app-bg" aria-hidden="true" />
       <a href="#main" className="sr-only skip-link">
         Skip to main content
       </a>
@@ -51,6 +53,14 @@ export default function App() {
               element={
                 <AuthGuard>
                   <Wallet />
+                </AuthGuard>
+              }
+            />
+            <Route
+              path="/transactions"
+              element={
+                <AuthGuard>
+                  <Transactions />
                 </AuthGuard>
               }
             />

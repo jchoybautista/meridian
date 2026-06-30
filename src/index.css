@@ -5,6 +5,22 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Liquid-glass material tokens. The blur needs something behind it to
+       refract (see .app-bg); a glass surface over a flat fill is just gray. */
+    --glass-fill: linear-gradient(
+      157deg,
+      rgba(255, 255, 255, 0.075),
+      rgba(255, 255, 255, 0.022)
+    );
+    --glass-border: rgba(255, 255, 255, 0.09);
+    --glass-blur: blur(18px) saturate(165%);
+    /* inset top sheen + soft drop shadow = the "liquid" depth */
+    --glass-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.07),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.02),
+      0 12px 32px -14px rgba(0, 0, 0, 0.7);
+  }
+
   html {
     -webkit-text-size-adjust: 100%;
   }
@@ -52,8 +68,41 @@
 }
 
 @layer components {
+  /* Fixed depth field behind all content — gives the glass surfaces colour to
+     refract. Static gradients (no layout cost); the slow drift is the only
+     motion and is killed by the reduced-motion reset above. */
+  .app-bg {
+    @apply pointer-events-none fixed inset-0 -z-10 overflow-hidden;
+    background:
+      radial-gradient(58vw 58vw at 10% 4%, rgba(99, 102, 241, 0.24), transparent 60%),
+      radial-gradient(52vw 52vw at 92% 26%, rgba(56, 189, 248, 0.13), transparent 60%),
+      radial-gradient(46vw 46vw at 38% 104%, rgba(168, 85, 247, 0.14), transparent 60%);
+    background-color: theme(colors.base);
+    animation: drift 26s ease-in-out infinite alternate;
+  }
+  /* Fine film grain so large blurred areas don't band on gradients. */
+  .app-bg::after {
+    content: "";
+    @apply absolute inset-0;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    opacity: 0.04;
+    mix-blend-mode: overlay;
+  }
+
   .card {
-    @apply rounded-xl border border-line bg-card;
+    @apply rounded-xl;
+    background: var(--glass-fill);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: var(--glass-blur);
+    backdrop-filter: var(--glass-blur);
+  }
+
+  /* Full-bleed chrome (sidebar, bottom nav): stronger blur, no rounding. */
+  .glass-chrome {
+    background: rgba(255, 255, 255, 0.035);
+    -webkit-backdrop-filter: blur(22px) saturate(165%);
+    backdrop-filter: blur(22px) saturate(165%);
   }
 
   /* Skip-link styling: hidden until focused */

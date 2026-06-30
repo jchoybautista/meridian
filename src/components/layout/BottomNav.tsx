@@ -6,7 +6,7 @@ export function BottomNav() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-card/95 backdrop-blur md:hidden"
+      className="glass-chrome fixed inset-x-0 bottom-0 z-40 border-t border-line md:hidden"
     >
       <ul className="mx-auto flex max-w-content items-stretch justify-around">
         {NAV_ITEMS.map((item) => (
