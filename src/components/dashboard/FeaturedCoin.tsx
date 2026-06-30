@@ -16,7 +16,7 @@ export function FeaturedCoin({ asset }: Props) {
   return (
     <Link
       to={`/asset/crypto/${asset.id}`}
-      className="card flex flex-col p-4 transition-colors hover:border-brand/60"
+      className="card flex flex-col p-5 transition-colors hover:border-brand/60"
     >
       <div className="flex items-center gap-2.5">
         <AssetIcon asset={asset} size={32} />

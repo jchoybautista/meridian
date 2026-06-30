@@ -20,7 +20,7 @@ export function MarketsCrypto() {
       {loading && (
         <>
           <LoadingAnnounce label="Loading crypto markets" />
-          <div className="card p-6 text-ink-muted">Loading markets…</div>
+          <div className="card p-5 text-ink-muted">Loading markets…</div>
         </>
       )}
       {error && <ErrorState message={error} onRetry={reload} />}

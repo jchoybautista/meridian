@@ -14,7 +14,7 @@ export function MarketsStocks() {
       {loading && (
         <>
           <LoadingAnnounce label="Loading stocks" />
-          <div className="card p-6 text-ink-muted">Loading stocks…</div>
+          <div className="card p-5 text-ink-muted">Loading stocks…</div>
         </>
       )}
       {error && <ErrorState message={error} onRetry={reload} />}

@@ -43,7 +43,7 @@ function AddFundsModal({
   if (done) {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm">
-        <div className="card mx-4 w-full max-w-sm p-6 text-center">
+        <div className="card mx-4 w-full max-w-sm p-5 text-center">
           <PiggyBank className="mx-auto mb-3 h-10 w-10 text-up" aria-hidden="true" />
           <p className="text-lg font-bold">Funds Added!</p>
           <p className="mt-1 text-sm text-ink-muted">

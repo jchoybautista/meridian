@@ -13,7 +13,7 @@ export function PriceCard({ asset }: Props) {
   return (
     <Link
       to={`/asset/${asset.type}/${asset.id}`}
-      className="card group flex min-h-[44px] flex-col gap-3 p-4 transition-colors hover:border-brand/60 hover:bg-elevated"
+      className="card group flex min-h-[44px] flex-col gap-3 p-5 transition-colors hover:border-brand/60 hover:bg-elevated"
       aria-label={`${asset.name}, ${formatPrice(asset.price)}, 24 hour change ${asset.change24h.toFixed(2)} percent`}
     >
       <div className="flex items-center gap-3">

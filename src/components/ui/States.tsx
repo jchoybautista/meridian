@@ -37,7 +37,7 @@ export function EmptyState({
   action?: ReactNode;
 }) {
   return (
-    <div className="card flex flex-col items-center gap-3 p-10 text-center">
+    <div className="card flex flex-col items-center gap-3 p-8 text-center">
       <Inbox className="h-10 w-10 text-ink-muted" aria-hidden="true" />
       <h2 className="text-lg font-semibold">{title}</h2>
       <p className="max-w-sm text-ink-muted">{message}</p>
@@ -54,7 +54,7 @@ export function CardSkeletonGrid({ count = 5 }: { count?: number }) {
       aria-hidden="true"
     >
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="card h-[116px] p-4">
+        <div key={i} className="card h-[116px] p-5">
           <div className="skeleton h-9 w-9 rounded-full" />
           <div className="skeleton mt-3 h-4 w-2/3 rounded" />
           <div className="skeleton mt-2 h-5 w-1/2 rounded" />

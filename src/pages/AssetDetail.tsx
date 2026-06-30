@@ -240,7 +240,7 @@ export function AssetDetail() {
       </Link>
 
       {!asset ? (
-        <div className="card p-8 text-ink-muted" role="status">Loading asset…</div>
+        <div className="card p-5 text-ink-muted" role="status">Loading asset…</div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
           {/* ── Main content (left column) ── */}
@@ -434,7 +434,7 @@ export function AssetDetail() {
 
               {/* Analyst Ratings */}
               {analystRatings.data && (
-                <div className="card mb-6 p-5">
+                <div className="card p-5 mb-6">
                   <div className="mb-3 flex items-center justify-between">
                     <h2 className="text-sm font-semibold">Analyst Ratings</h2>
                     <span className={`rounded-full px-3 py-0.5 text-xs font-bold ${
@@ -451,7 +451,7 @@ export function AssetDetail() {
 
               {/* Financial Highlights */}
               {financials.data && financials.data.length > 0 && (
-                <div className="card mb-6 p-5">
+                <div className="card p-5 mb-6">
                   <h2 className="mb-4 text-sm font-semibold">Financial Highlights</h2>
                   <FinancialChart data={financials.data} />
                 </div>
@@ -459,7 +459,7 @@ export function AssetDetail() {
 
               {/* Company News */}
               {stockNews.data && stockNews.data.length > 0 && (
-                <section className="card mb-6 p-5" aria-labelledby="news-heading">
+                <section className="card p-5 mb-6" aria-labelledby="news-heading">
                   <h2 id="news-heading" className="mb-4 text-sm font-semibold">Company News</h2>
                   <ul className="space-y-3">
                     {stockNews.data.map((item, i) => (
@@ -529,7 +529,7 @@ export function AssetDetail() {
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="card p-4">
+    <div className="card p-5">
       <dt className="text-xs text-ink-muted">{label}</dt>
       <dd className="mt-1 font-semibold tabular-nums">{value}</dd>
     </div>
@@ -540,7 +540,7 @@ function PerformanceStat({ label, value }: { label: string; value: number }) {
   const dir = changeDirection(value);
   const color = dir === "up" ? "text-up" : dir === "down" ? "text-down" : "text-ink-muted";
   return (
-    <div className="card p-4">
+    <div className="card p-5">
       <dt className="text-xs text-ink-muted">{label}</dt>
       <dd className={`mt-1 font-semibold tabular-nums ${color}`}>{formatPercent(value)}</dd>
     </div>
@@ -560,7 +560,7 @@ function AboutCrypto({
 
   if (loading) {
     return (
-      <section aria-labelledby="about-heading" className="card p-6">
+      <section aria-labelledby="about-heading" className="card p-5">
         <h2 id="about-heading" className="mb-4 text-lg font-bold">About {asset.name}</h2>
         <div className="space-y-2">
           <div className="skeleton h-4 rounded" />
@@ -578,7 +578,7 @@ function AboutCrypto({
   const shown = isLong && !expanded ? info.description.slice(0, SHORT) + "…" : info.description;
 
   return (
-    <section aria-labelledby="about-heading" className="card p-6">
+    <section aria-labelledby="about-heading" className="card p-5">
       <h2 id="about-heading" className="mb-4 text-lg font-bold">About {asset.name}</h2>
 
       {info.categories.length > 0 && (
@@ -630,7 +630,7 @@ function AboutStock({
 
   if (!finnhubConfigured) {
     return (
-      <section className="card p-6">
+      <section className="card p-5">
         <h2 className="mb-2 text-lg font-bold">About {asset.name}</h2>
         <p className="text-sm text-ink-muted">
           Add a free{" "}
@@ -650,7 +650,7 @@ function AboutStock({
 
   if (loading) {
     return (
-      <section className="card p-6">
+      <section className="card p-5">
         <h2 className="mb-4 text-lg font-bold">About {asset.name}</h2>
         <div className="space-y-2">
           <div className="skeleton h-4 rounded" />
@@ -667,7 +667,7 @@ function AboutStock({
   const shown = isLong && !expanded ? profile.description.slice(0, SHORT) + "…" : profile.description;
 
   return (
-    <section className="card p-6">
+    <section className="card p-5">
       <h2 className="mb-4 text-lg font-bold">About {asset.name}</h2>
 
       <div className="mb-4 flex flex-wrap gap-2">

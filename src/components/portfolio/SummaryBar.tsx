@@ -28,7 +28,7 @@ function StatPill({
         : "text-ink"
     : "text-ink";
   return (
-    <div className="card flex-1 min-w-[140px] p-4">
+    <div className="card flex-1 min-w-[140px] p-5">
       <p className="text-xs text-ink-muted">{label}</p>
       <p className={`mt-1 text-lg font-extrabold tabular-nums ${color}`}>
         {value >= 0 ? "+" : ""}
@@ -47,7 +47,7 @@ function StatPill({
 
 function SkeletonPill() {
   return (
-    <div className="card flex-1 min-w-[140px] p-4 space-y-2">
+    <div className="card flex-1 min-w-[140px] p-5 space-y-2">
       <div className="skeleton h-3 w-20 rounded" />
       <div className="skeleton h-6 w-28 rounded" />
     </div>
@@ -75,7 +75,7 @@ export function SummaryBar({ summary, loading, isLive = false }: Props) {
           </>
         ) : (
           <>
-            <div className="card flex-1 min-w-[140px] p-4">
+            <div className="card flex-1 min-w-[140px] p-5">
               <p className="text-xs text-ink-muted">Total Value</p>
               <p className="mt-1 text-lg font-extrabold tabular-nums">
                 {formatPrice(summary.totalValue)}

@@ -103,7 +103,7 @@ export function FearGreedGauge() {
         </div>
       ) : data ? (
         <div
-          className="flex h-full flex-col items-center justify-center gap-2 px-4 pb-2"
+          className="flex h-full flex-col items-center justify-center gap-2 px-4"
           aria-label={`Fear and Greed Index: ${data.value} — ${data.classification}`}
         >
           <GaugeArc value={data.value} />

@@ -14,7 +14,7 @@ interface Props {
 /** Standard dashboard card with a titled header and optional link arrow. */
 export function Panel({ title, subtitle, to, className = "", children }: Props) {
   return (
-    <section className={`card flex flex-col overflow-hidden p-4 ${className}`}>
+    <section className={`card flex flex-col overflow-hidden p-5 ${className}`}>
       <header className="mb-3 flex items-start justify-between gap-2">
         <div>
           <h2 className="font-bold leading-tight">{title}</h2>

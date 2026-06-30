@@ -48,7 +48,7 @@ export function AuthForm({ mode }: Props) {
         <span className="text-2xl font-extrabold tracking-tight">Meridian</span>
       </div>
 
-      <div className="card p-6">
+      <div className="card p-5">
         <h1 className="mb-1 text-xl font-bold">{isLogin ? "Sign in" : "Create account"}</h1>
         <p className="mb-5 text-sm text-ink-muted">
           {isLogin
