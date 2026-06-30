@@ -98,11 +98,17 @@
     backdrop-filter: var(--glass-blur);
   }
 
-  /* Full-bleed chrome (sidebar, bottom nav): stronger blur, no rounding. */
+  /* Full-bleed chrome (sidebar, bottom nav): stronger blur, no rounding.
+     Glass fill sits over a dark base — the base prevents the top-left indigo
+     radial from bleeding through the saturate filter while the gradient +
+     inset sheen preserve the liquid-glass material. */
   .glass-chrome {
-    background: rgba(255, 255, 255, 0.035);
-    -webkit-backdrop-filter: blur(22px) saturate(165%);
-    backdrop-filter: blur(22px) saturate(165%);
+    background:
+      linear-gradient(157deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+      rgba(7, 10, 20, 0.80);
+    box-shadow: var(--glass-shadow);
+    -webkit-backdrop-filter: blur(24px) saturate(175%);
+    backdrop-filter: blur(24px) saturate(175%);
   }
 
   /* Skip-link styling: hidden until focused */

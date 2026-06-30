@@ -8,7 +8,7 @@ export function Sidebar() {
   const { user, signOut, configured } = useAuth();
 
   return (
-    <aside className="glass-chrome sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line p-4 md:flex">
+    <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col border-r border-line p-4 md:flex">
       <div className="mb-8 flex items-center gap-2 px-2">
         <TrendingUp className="h-6 w-6 text-brand" aria-hidden="true" />
         <span className="text-xl font-extrabold tracking-tight">Meridian</span>
