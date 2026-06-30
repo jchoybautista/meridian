@@ -1,6 +1,7 @@
+import { Link } from 'react-router-dom';
 import {
   Bell, DollarSign, Globe, Info, FileText, Lock,
-  Shield, UserPen, LogOut,
+  Shield, UserPen, LogOut, LogIn,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSettings } from '../../hooks/useSettings';
@@ -25,8 +26,78 @@ export function Settings() {
   const { user, signOut } = useAuth();
   const { currency, language, displayName } = useSettings();
 
-  const initials = getInitials(displayName, user?.email ?? '');
+  const initials = user ? getInitials(displayName, user.email ?? '') : '';
   const joinDate = user?.created_at ? formatJoinDate(user.created_at) : '';
+
+  const preferencesSection = (
+    <>
+      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Preferences
+      </p>
+      <div className="card divide-y divide-line mb-6">
+        <SettingsRow icon={Bell} label="Notifications" to="/settings/notifications" />
+        <SettingsRow icon={DollarSign} label="Currency" value={currency} to="/settings/currency" />
+        <SettingsRow
+          icon={Globe}
+          label="Language"
+          value={LANGUAGE_LABELS[language] ?? language}
+          to="/settings/language"
+        />
+      </div>
+    </>
+  );
+
+  const privacySection = (
+    <>
+      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Privacy
+      </p>
+      <div className="card divide-y divide-line mb-6">
+        <SettingsRow icon={Shield} label="Privacy Settings" to="/settings/privacy-settings" />
+      </div>
+    </>
+  );
+
+  const legalSection = (
+    <>
+      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+        Legal
+      </p>
+      <div className="card divide-y divide-line mb-6">
+        <SettingsRow icon={Info} label="About Meridian" to="/settings/about" />
+        <SettingsRow icon={FileText} label="Terms & Conditions" to="/settings/terms" />
+        <SettingsRow icon={Lock} label="Privacy Policy" to="/settings/privacy" />
+      </div>
+    </>
+  );
+
+  if (!user) {
+    return (
+      <div className="animate-fade-in mx-auto max-w-lg">
+        <PageHeader title="Settings" />
+
+        {preferencesSection}
+        {privacySection}
+
+        <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
+          Account
+        </p>
+        <div className="card p-5 mb-6">
+          <div className="flex items-center gap-3">
+            <LogIn className="h-5 w-5 shrink-0 text-ink-muted" aria-hidden="true" />
+            <p className="text-sm text-ink-muted">
+              <Link to="/login" className="font-semibold text-brand hover:underline">
+                Sign in
+              </Link>{' '}
+              to view and edit your profile.
+            </p>
+          </div>
+        </div>
+
+        {legalSection}
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in mx-auto max-w-lg">
@@ -42,7 +113,7 @@ export function Settings() {
             {initials}
           </div>
           <div className="min-w-0">
-            <p className="truncate font-semibold">{displayName || user?.email}</p>
+            <p className="truncate font-semibold">{displayName || user.email}</p>
             {joinDate && (
               <p className="text-sm text-ink-muted">Meridian member since {joinDate}</p>
             )}
@@ -50,38 +121,8 @@ export function Settings() {
         </div>
       </div>
 
-      {/* Preferences */}
-      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-        Preferences
-      </p>
-      <div className="card divide-y divide-line mb-6">
-        <SettingsRow icon={Bell} label="Notifications" to="/settings/notifications" />
-        <SettingsRow icon={DollarSign} label="Currency" value={currency} to="/settings/currency" />
-        <SettingsRow
-          icon={Globe}
-          label="Language"
-          value={LANGUAGE_LABELS[language] ?? language}
-          to="/settings/language"
-        />
-      </div>
-
-      {/* Legal */}
-      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-        Legal
-      </p>
-      <div className="card divide-y divide-line mb-6">
-        <SettingsRow icon={Info} label="About Meridian" to="/settings/about" />
-        <SettingsRow icon={FileText} label="Terms & Conditions" to="/settings/terms" />
-        <SettingsRow icon={Lock} label="Privacy Policy" to="/settings/privacy" />
-      </div>
-
-      {/* Privacy */}
-      <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
-        Privacy
-      </p>
-      <div className="card divide-y divide-line mb-6">
-        <SettingsRow icon={Shield} label="Privacy Settings" to="/settings/privacy-settings" />
-      </div>
+      {preferencesSection}
+      {privacySection}
 
       {/* Account */}
       <p className="mb-2 px-1 text-xs font-semibold uppercase tracking-wide text-ink-muted">
@@ -91,6 +132,8 @@ export function Settings() {
         <SettingsRow icon={UserPen} label="Edit Profile" to="/settings/profile" />
         <SettingsRow label="Deactivate Account" to="/settings/profile" danger />
       </div>
+
+      {legalSection}
 
       {/* Sign out */}
       <button

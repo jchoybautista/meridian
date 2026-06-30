@@ -75,11 +75,7 @@ export default function App() {
             />
             <Route
               path="/settings"
-              element={
-                <AuthGuard>
-                  <Settings />
-                </AuthGuard>
-              }
+              element={<Settings />}
             />
             <Route
               path="/settings/profile"
