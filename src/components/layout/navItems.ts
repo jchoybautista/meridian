@@ -28,3 +28,13 @@ export const NAV_ITEMS: NavItem[] = [
   { to: "/transactions", label: "Transactions", icon: Receipt, protected: true },
   { to: "/settings", label: "Settings", icon: Settings, protected: true },
 ];
+
+/** The 5 primary destinations shown in the mobile bottom nav.
+ *  Wallet, Watchlist, and Transactions are accessible from within Portfolio / Settings. */
+export const BOTTOM_NAV_ITEMS: NavItem[] = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/markets/crypto", label: "Crypto", icon: Bitcoin },
+  { to: "/markets/stocks", label: "Stocks", icon: LineChart },
+  { to: "/portfolio", label: "Portfolio", icon: Wallet, protected: true },
+  { to: "/settings", label: "Settings", icon: Settings, protected: true },
+];
